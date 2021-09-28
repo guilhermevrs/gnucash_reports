@@ -8,12 +8,14 @@ from dash import html, dcc
 import plotly.express as px
 import pandas as pd
 
+# Scheduled: credit is when you lose, debit is when you receive
+
 def piecash_test():
     print('# Opening file')
     book = piecash.open_book("/mnt/c/Users/guilh/Documents/Gnucash/test_sqllite/test_sqllite.gnucash")
     journal = TransactionJournal(book)
-    transactions = journal.get_recorded_transactions(date(2021, 9, 10), date(2021, 9, 20))
-    scheduled_transactions = journal.get_scheduled_transactions(date(2021, 9, 10), date(2021, 10, 20))
+    transactions = journal.get_recorded_transactions(date(2021, 10, 1), date(2021, 10, 30))
+    scheduled_transactions = journal.get_scheduled_transactions(date(2021, 10, 1), date(2021, 10, 30))
     for acc in book.root_account.children:
         print(acc)
     scheduled = book.get(ScheduledTransaction)
@@ -48,4 +50,5 @@ app.layout = html.Div(children=[
 
 if __name__ == "__main__":
     # execute only if run as a script
-    app.run_server(debug=True)
+    # app.run_server(debug=True)
+    piecash_test()

@@ -1,4 +1,5 @@
 from datetime import date
+from tests.test_piecash_helper import TestPiecashHelper
 from unittest.mock import MagicMock
 from piecash.core.transaction import ScheduledTransaction, Transaction
 import pytest
@@ -8,11 +9,14 @@ from piecash.core.book import Book
 from mock_alchemy.mocking import AlchemyMagicMock
 from mock_recurrence import MockRecurrence
 
+@pytest.fixture(autouse=True, scope="class")
+def piecash_helper():
+    return TestPiecashHelper()
 
 class TestTransactionJournal:
 
     @pytest.fixture(autouse=True)
-    def before_all(self):
+    def before_each(self):
         """Fixture to execute asserts before and after a test is run"""
         # Setup
         self.mockBook = Book()
@@ -41,10 +45,6 @@ class TestTransactionJournal:
             or_(ScheduledTransaction.end_date >= end_date, ScheduledTransaction.end_date == None),
             ScheduledTransaction.enabled == True
         )
-    
-    def test_get_scheduled_transactions_filter_by_recurrence(self):
-        # TODO: Find a way to test by stubbing
-        pass
 
     def test__get_recursive_occurences_monthly_in(self):
         """should return the number of occurences exists, given the recurence"""
@@ -90,9 +90,3 @@ class TestTransactionJournal:
 
         assert self.testClass._get_recursive_occurences(recurrence, date(2020, 10, 12), date(2020, 10, 22)) == []
         assert self.testClass._get_recursive_occurences(recurrence, date(2020, 10, 12), date(2021, 10, 13)) == []
-
-    def test_get_transactions_by_period(self):
-        # TODO: Find a way to test by stubbing
-        # test if recorded via scheduled get removed
-        pass
-
