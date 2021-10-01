@@ -25,8 +25,7 @@ class TestTransactionDataItem:
 
         data_item = TransactionDataItem(date(2000, 10, 10), recorded, scheduled)
 
-        assert len(data_item.recorded) == 4
-        assert len(data_item.scheduled) == 1
+        assert len(data_item.transactions) == 5
 
     def test_get_balance_with_expenses(self, piecash_helper: TestPiecashHelper):
         """should return negative balances for expenses"""
@@ -94,7 +93,6 @@ class TestTransactionDataItem:
         data_item = TransactionDataItem(date(2000, 10, 10), recorded, scheduled)
         assert data_item.get_balance() == Decimal('123')
     
-    @pytest.mark.skip(reason="no way of currently testing this")
     def test_get_balance_with_transfer(self, piecash_helper):
         # Test with recorded
         scheduled = []
@@ -103,5 +101,3 @@ class TestTransactionDataItem:
         ]
         data_item = TransactionDataItem(date(2000, 10, 10), recorded, scheduled)
         assert data_item.get_balance() == Decimal('0')
-
-        # TODO: Test when we need to get transfers

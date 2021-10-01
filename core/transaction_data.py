@@ -7,4 +7,4 @@ from dataclasses import dataclass
 
 @dataclass
 class TransactionData:
-    items: List[TransactionDataItem]
+    items: List[TransactionDataItem] = []

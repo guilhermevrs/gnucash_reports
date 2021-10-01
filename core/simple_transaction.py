@@ -18,6 +18,7 @@ class SimpleTransaction:
     to_account: str
     to_account_guid: str
     transaction_type: TransactionType
+    is_scheduled: bool = False
 
     @classmethod
     def simplify_record(cls, tr: Transaction):
@@ -79,5 +80,6 @@ class SimpleTransaction:
             from_account_guid = from_account.guid,
             to_account = to_account.fullname,
             to_account_guid = to_account.guid,
-            transaction_type = transaction_type
+            transaction_type = transaction_type,
+            is_scheduled = True
         )
