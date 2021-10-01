@@ -5,16 +5,14 @@ from core.simple_transaction import SimpleTransaction, TransactionType
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import List
-from piecash.core.account import Account
-from piecash.core.transaction import ScheduledTransaction, Split, Transaction
+from piecash.core.transaction import ScheduledTransaction, Transaction
 
 @dataclass
 class TransactionDataItem:
     date: date
-    transactions: List[SimpleTransaction]
+    transactions: list[SimpleTransaction]
 
-    def __init__(self, date: date, recorded: List[Transaction], scheduled: List[ScheduledTransaction]) -> None:
+    def __init__(self, date: date, recorded: list[Transaction], scheduled: list[ScheduledTransaction]) -> None:
         self.date = date
         self.transactions = []
         # Get all the guids from scheduled recorded
