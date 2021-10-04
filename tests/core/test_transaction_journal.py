@@ -193,7 +193,6 @@ class TestTransactionJournal:
         ])
         assert result == expected
 
-    @patch.object(TransactionData, '__init__')
     @patch.object(TransactionJournal, '_get_raw_transaction_data')
     @patch.object(TransactionJournal, 'get_scheduled_transactions')
     @patch.object(TransactionJournal, 'get_recorded_transactions')

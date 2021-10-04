@@ -35,3 +35,21 @@ class TestTransactionData:
         result = TransactionData(data=dic)
         assert len(result.items) == 1
         assert len(result.items[0].transactions) == 2
+
+    def test_filter_by_date(self, piecash_helper: TestPiecashHelper):
+        data = TransactionData(data=dict())
+        result = data.filter_by_date(start_date=date(2000,10,20), end_date=date(2000,10,20))
+        assert len(result) == 0
+
+        recorded_expense = piecash_helper.get_expense_record()
+        dic: RawTransactionData = dict([
+            (date(2000, 10, 10), ([
+                recorded_expense
+            ], []))
+        ])
+        data = TransactionData(data=dic)
+        result = data.filter_by_date(start_date=date(2000,10,10), end_date=date(2000,10,20))
+        assert len(result) == 1
+
+        result = data.filter_by_date(start_date=date(2000,10,11), end_date=date(2000,10,20))
+        assert len(result) == 0
