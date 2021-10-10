@@ -1,4 +1,5 @@
 from datetime import date
+from core.simple_transaction import SimpleTransaction, TransactionType
 from core.transaction_journal import TransactionJournal
 import piecash
 from piecash.core.transaction import ScheduledTransaction
@@ -22,33 +23,36 @@ def piecash_test():
     for tr in scheduled.all():
         print(tr)
 
-app = dash.Dash(__name__)
+def dash_test():
 
-# assume you have a "long-form" data frame
-# see https://plotly.com/python/px-arguments/ for more options
-df = pd.DataFrame({
-    "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
-    "Amount": [4, 1, 2, 2, 4, 5],
-    "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
-})
+    app = dash.Dash(__name__)
 
-fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
+    # assume you have a "long-form" data frame
+    # see https://plotly.com/python/px-arguments/ for more options
+    df = pd.DataFrame({
+        "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
+        "Amount": [4, 1, 2, 2, 4, 5],
+        "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
+    })
 
-app.layout = html.Div(children=[
-    html.H1(children='Test'),
+    fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
 
-    html.Div(children='''
-        Dash: A web application framework for your data.
-    '''),
+    app.layout = html.Div(children=[
+        html.H1(children='Test'),
 
-    dcc.Graph(
-        id='example-graph',
-        figure=fig
-    )
-])
+        html.Div(children='''
+            Dash: A web application framework for your data.
+        '''),
 
+        dcc.Graph(
+            id='example-graph',
+            figure=fig
+        )
+    ])
+    app.run_server(debug=True)
+ 
 
 if __name__ == "__main__":
     # execute only if run as a script
-    # app.run_server(debug=True)
-    piecash_test()
+    dash_test()
+    # piecash_test()

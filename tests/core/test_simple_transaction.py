@@ -73,3 +73,17 @@ class TestSimpleTransaction:
         assert result.to_account_guid == 'd4295e1f81ce43ad8bdfa31ec5f38f88'
         assert result.transaction_type == TransactionType.TRANSFER
         assert result.is_scheduled == True
+
+    def test_get_dataframe(self):
+        transaction = SimpleTransaction(
+            value=0, 
+            from_account="Account1", 
+            from_account_guid="Account1Guid", 
+            to_account="Account2", 
+            to_account_guid="Account2Guid", 
+            transaction_type=TransactionType.EXPENSE, 
+            is_scheduled=False)
+        
+        df = transaction.get_dataframe()
+
+        assert len(df.columns) == 7

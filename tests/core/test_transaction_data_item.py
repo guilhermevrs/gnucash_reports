@@ -1,5 +1,8 @@
 from datetime import date
 from decimal import Decimal
+
+import pandas as pd
+from core.simple_transaction import TransactionType
 from core.transaction_data_item import TransactionDataItem
 import pytest
 
@@ -101,3 +104,19 @@ class TestTransactionDataItem:
         ]
         data_item = TransactionDataItem(date(2000, 10, 10), recorded, scheduled)
         assert data_item.get_balance() == Decimal('0')
+
+    def test_get_dataframe(self, piecash_helper: TestPiecashHelper):
+        data_item = TransactionDataItem(date(2000,10,10), [], [])
+
+        assert len(data_item.get_dataframe()) == 0
+
+        data_item = TransactionDataItem(date(2000,10,10), [
+            piecash_helper.get_recorded_transfer(),
+            piecash_helper.get_income_record()
+        ], [])
+        df = data_item.get_dataframe()
+        assert len(df) == 2
+
+        assert len(df.columns) == 8
+        assert df['date'][0] == date(2000,10,10)
+        assert df['date'][1] == date(2000,10,10)

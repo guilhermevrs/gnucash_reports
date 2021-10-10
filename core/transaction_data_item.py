@@ -1,6 +1,7 @@
 """
 TransactionDataItem
 """
+import pandas as pd
 from core.simple_transaction import SimpleTransaction, TransactionType
 from dataclasses import dataclass
 from datetime import date
@@ -39,4 +40,12 @@ class TransactionDataItem:
                 income_balance = income_balance + tr.value
             
         return income_balance-expenses_balance
+
+    def get_dataframe(self) -> pd.DataFrame:
+        if len(self.transactions) == 0:
+            return pd.DataFrame()
+        else:
+            temp_dfs = [tr.get_dataframe() for tr in self.transactions]
+            df = pd.concat(temp_dfs, ignore_index=True).assign(date=lambda _: self.date)
+            return df
             

@@ -1,14 +1,15 @@
 from decimal import Decimal
 from enum import Enum
 from dataclasses import dataclass
+import pandas as pd
 from piecash.core.account import Account
 
 from piecash.core.transaction import ScheduledTransaction, Split, Transaction
 
 class TransactionType(Enum):
-    EXPENSE = 1
-    INCOME = 2
-    TRANSFER = 0
+    EXPENSE = "expense"
+    INCOME = "income"
+    TRANSFER = "transfer"
 
 @dataclass
 class SimpleTransaction:
@@ -19,6 +20,17 @@ class SimpleTransaction:
     to_account_guid: str
     transaction_type: TransactionType
     is_scheduled: bool = False
+
+    def get_dataframe(self) -> pd.DataFrame:
+        return pd.DataFrame([{
+            'value': self.value,
+            'from_account': self.from_account,
+            'from_account_guid': self.from_account_guid,
+            'to_account': self.from_account,
+            'to_account_guid': self.from_account_guid,
+            'transaction_type': self.transaction_type,
+            'is_scheduled': self.is_scheduled
+        }])
 
     @classmethod
     def simplify_record(cls, tr: Transaction):

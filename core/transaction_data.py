@@ -2,6 +2,8 @@
 TransactionData
 """
 from datetime import date
+
+import pandas as pd
 from core.transaction_data_item import TransactionDataItem
 from dataclasses import dataclass
 
@@ -19,6 +21,9 @@ class TransactionData:
                 recorded = item[1][0],
                 scheduled = item[1][1]
             ))
-    
-    def filter_by_date(self, start_date: date, end_date: date):
-        return [tr for tr in self.items if tr.date >= start_date and tr.date <= end_date]
+
+    def get_dataframe(self) -> pd.DataFrame:
+        if len(self.items) == 0:
+            return pd.DataFrame()
+        else:
+            return pd.concat([tr.get_dataframe() for tr in self.items], ignore_index=True)
