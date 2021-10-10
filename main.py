@@ -27,15 +27,13 @@ def dash_test():
 
     app = dash.Dash(__name__)
 
-    # assume you have a "long-form" data frame
-    # see https://plotly.com/python/px-arguments/ for more options
-    df = pd.DataFrame({
-        "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
-        "Amount": [4, 1, 2, 2, 4, 5],
-        "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
-    })
+    book = piecash.open_book("/mnt/c/Users/guilh/Documents/Gnucash/test_sqllite/test_sqllite.gnucash")
+    journal = TransactionJournal(book)
 
-    fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
+    transaction_data = journal.get_transaction_data(date(2021, 10, 1), date(2021, 10, 30))
+    df = transaction_data.get_dataframe()
+
+    fig = px.line(df.sort_values(by="date"), x="date", y="value", color="transaction_type", symbol="transaction_type", markers=True)
 
     app.layout = html.Div(children=[
         html.H1(children='Test'),

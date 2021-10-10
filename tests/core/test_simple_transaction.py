@@ -18,6 +18,7 @@ class TestSimpleTransaction:
         assert result.to_account_guid == 'f0071228d4e34548be65bf42f1bcf0fa'
         assert result.transaction_type == TransactionType.EXPENSE
         assert result.is_scheduled == False
+        assert result.description == "CheckingsExpenseFood1"
 
     def test_simplify_income_record(self, piecash_helper):
         income = piecash_helper.get_income_record()
@@ -29,6 +30,7 @@ class TestSimpleTransaction:
         assert result.to_account_guid == '24b92fc00a9440c2856281f6eb093536'
         assert result.transaction_type == TransactionType.INCOME
         assert result.is_scheduled == False
+        assert result.description == "CheckingsSalary1"
 
     def test_simplify_transfer_record(self, piecash_helper):
         transfer = piecash_helper.get_recorded_transfer()
@@ -40,6 +42,7 @@ class TestSimpleTransaction:
         assert result.to_account_guid == 'd4295e1f81ce43ad8bdfa31ec5f38f88'
         assert result.transaction_type == TransactionType.TRANSFER
         assert result.is_scheduled == False
+        assert result.description == "CheckingsTransfer"
 
     def test_simplify_expense_scheduled(self, piecash_helper):
         expense = piecash_helper.get_scheduled_expense()
@@ -51,6 +54,7 @@ class TestSimpleTransaction:
         assert result.to_account_guid == 'f0071228d4e34548be65bf42f1bcf0fa'
         assert result.transaction_type == TransactionType.EXPENSE
         assert result.is_scheduled == True
+        assert result.description == "SampledScheduled"
 
     def test_simplify_income_scheduled(self, piecash_helper):
         income = piecash_helper.get_scheduled_income()
@@ -62,6 +66,7 @@ class TestSimpleTransaction:
         assert result.to_account_guid == '24b92fc00a9440c2856281f6eb093536'
         assert result.transaction_type == TransactionType.INCOME
         assert result.is_scheduled == True
+        assert result.description == "ScheduledIncome"
 
     def test_simplify_transfer_scheduled(self, piecash_helper):
         transfer = piecash_helper.get_scheduled_transfer()
@@ -73,10 +78,12 @@ class TestSimpleTransaction:
         assert result.to_account_guid == 'd4295e1f81ce43ad8bdfa31ec5f38f88'
         assert result.transaction_type == TransactionType.TRANSFER
         assert result.is_scheduled == True
+        assert result.description == "ScheduledTransfer"
 
     def test_get_dataframe(self):
         transaction = SimpleTransaction(
-            value=0, 
+            value=0,
+            description="Example",
             from_account="Account1", 
             from_account_guid="Account1Guid", 
             to_account="Account2", 
@@ -86,4 +93,4 @@ class TestSimpleTransaction:
         
         df = transaction.get_dataframe()
 
-        assert len(df.columns) == 7
+        assert len(df.columns) == 8

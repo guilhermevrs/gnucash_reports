@@ -117,6 +117,6 @@ class TestTransactionDataItem:
         df = data_item.get_dataframe()
         assert len(df) == 2
 
-        assert len(df.columns) == 8
+        assert len(df.columns) == 9
         assert df['date'][0] == date(2000,10,10)
         assert df['date'][1] == date(2000,10,10)

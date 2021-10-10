@@ -14,6 +14,7 @@ class TransactionType(Enum):
 @dataclass
 class SimpleTransaction:
     value: Decimal
+    description: str
     from_account: str
     from_account_guid: str
     to_account: str
@@ -24,6 +25,7 @@ class SimpleTransaction:
     def get_dataframe(self) -> pd.DataFrame:
         return pd.DataFrame([{
             'value': self.value,
+            'description': self.description,
             'from_account': self.from_account,
             'from_account_guid': self.from_account_guid,
             'to_account': self.from_account,
@@ -56,6 +58,7 @@ class SimpleTransaction:
 
         return cls(
             value = value,
+            description = tr.description,
             from_account = from_account.fullname,
             from_account_guid = from_account.guid,
             to_account = to_account.fullname,
@@ -88,6 +91,7 @@ class SimpleTransaction:
 
         return cls(
             value = value,
+            description = tr.name,
             from_account = from_account.fullname,
             from_account_guid = from_account.guid,
             to_account = to_account.fullname,
