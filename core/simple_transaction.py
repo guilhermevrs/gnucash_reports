@@ -10,29 +10,34 @@ class TransactionType(Enum):
     EXPENSE = "expense"
     INCOME = "income"
     TRANSFER = "transfer"
+    BALANCE = "balance"
 
 @dataclass
 class SimpleTransaction:
     value: Decimal
-    description: str
-    from_account: str
-    from_account_guid: str
-    to_account: str
-    to_account_guid: str
-    transaction_type: TransactionType
+    description: str = ""
+    from_account: str = ""
+    from_account_guid: str = ""
+    to_account: str = ""
+    to_account_guid: str = ""
+    transaction_type: TransactionType = TransactionType.BALANCE
     is_scheduled: bool = False
 
     def get_dataframe(self) -> pd.DataFrame:
-        return pd.DataFrame([{
+        df_dict = {
             'value': self.value,
-            'description': self.description,
-            'from_account': self.from_account,
-            'from_account_guid': self.from_account_guid,
-            'to_account': self.from_account,
-            'to_account_guid': self.from_account_guid,
-            'transaction_type': self.transaction_type,
             'is_scheduled': self.is_scheduled
-        }])
+        }
+        if self.transaction_type != TransactionType.BALANCE:
+            df_dict.update({
+                'description': self.description,
+                'from_account': self.from_account,
+                'from_account_guid': self.from_account_guid,
+                'to_account': self.from_account,
+                'to_account_guid': self.from_account_guid,
+                'transaction_type': self.transaction_type
+            })
+        return pd.DataFrame([df_dict])
 
     @classmethod
     def simplify_record(cls, tr: Transaction):

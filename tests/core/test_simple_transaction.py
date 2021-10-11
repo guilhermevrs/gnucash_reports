@@ -94,3 +94,12 @@ class TestSimpleTransaction:
         df = transaction.get_dataframe()
 
         assert len(df.columns) == 8
+    
+    def test_get_dataframe_balance(self):
+        transaction = SimpleTransaction(value=12)
+        
+        df = transaction.get_dataframe()
+
+        assert len(df.columns) == 2
+        assert df["value"][0] == 12
+        assert df["is_scheduled"][0] == False

@@ -4,16 +4,16 @@ TransactionDataItem
 import pandas as pd
 from core.simple_transaction import SimpleTransaction, TransactionType
 from dataclasses import dataclass
-from datetime import date
+from datetime import datetime
 from decimal import Decimal
 from piecash.core.transaction import ScheduledTransaction, Transaction
 
 @dataclass
 class TransactionDataItem:
-    date: date
+    date: datetime
     transactions: list[SimpleTransaction]
 
-    def __init__(self, date: date, recorded: list[Transaction], scheduled: list[ScheduledTransaction]) -> None:
+    def __init__(self, date: datetime, recorded: list[Transaction], scheduled: list[ScheduledTransaction]) -> None:
         self.date = date
         self.transactions = []
         # Get all the guids from scheduled recorded
@@ -30,14 +30,16 @@ class TransactionDataItem:
                 self.transactions.append(SimpleTransaction.simplify_scheduled_record(sch))
 
     def get_balance(self) -> Decimal:
-
         expenses_balance: Decimal = Decimal('0')
         income_balance: Decimal = Decimal('0')
+
         for tr in self.transactions:
             if tr.transaction_type == TransactionType.EXPENSE:
                 expenses_balance = expenses_balance + tr.value
             elif tr.transaction_type == TransactionType.INCOME:
                 income_balance = income_balance + tr.value
+
+        # TODO: Handle transfers
             
         return income_balance-expenses_balance
 
@@ -48,4 +50,3 @@ class TransactionDataItem:
             temp_dfs = [tr.get_dataframe() for tr in self.transactions]
             df = pd.concat(temp_dfs, ignore_index=True).assign(date=lambda _: self.date)
             return df
-            

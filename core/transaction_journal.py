@@ -129,6 +129,4 @@ class TransactionJournal:
 
         return TransactionData(data=raw_data)
 
-    # TODO: Get transactions by date, filtering scheduled when they are recorded
-
 

@@ -1,7 +1,7 @@
 """
 TransactionData
 """
-from datetime import date
+from decimal import Decimal
 
 import pandas as pd
 from core.transaction_data_item import TransactionDataItem
@@ -26,4 +26,32 @@ class TransactionData:
         if len(self.items) == 0:
             return pd.DataFrame()
         else:
-            return pd.concat([tr.get_dataframe() for tr in self.items], ignore_index=True)
+            return pd.concat([tr.get_dataframe for tr in self.items], ignore_index=True)
+
+    def get_balance_data(self, initial_amount: Decimal) -> pd.DataFrame:
+        """
+        TODO: Improve
+        Inputs:
+            - Accounts?
+            - Scheduled or not?
+        """
+        if len(self.items) == 0:
+            return None
+
+        balance = initial_amount
+        data_list = [{
+            'diff': Decimal(0),
+            'balance': balance,
+            'date': self.items[0].date
+        }]
+        for tr in self.items:
+            diff = tr.get_balance()
+            balance = balance + diff
+            data_list.append({
+                'diff': diff,
+                'balance': balance,
+                'date': tr.date
+            })
+        return pd.DataFrame(data_list)
+
+        # TODO: Ensure that the min date is taken
