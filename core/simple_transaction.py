@@ -10,7 +10,7 @@ class TransactionType(Enum):
     EXPENSE = "expense"
     INCOME = "income"
     TRANSFER = "transfer"
-    BALANCE = "balance"
+    OPENING_BALANCE = "opening_balance"
 
 @dataclass
 class SimpleTransaction:
@@ -20,7 +20,7 @@ class SimpleTransaction:
     from_account_guid: str = ""
     to_account: str = ""
     to_account_guid: str = ""
-    transaction_type: TransactionType = TransactionType.BALANCE
+    transaction_type: TransactionType = TransactionType.OPENING_BALANCE
     is_scheduled: bool = False
 
     def get_dataframe(self) -> pd.DataFrame:
@@ -28,7 +28,7 @@ class SimpleTransaction:
             'value': self.value,
             'is_scheduled': self.is_scheduled
         }
-        if self.transaction_type != TransactionType.BALANCE:
+        if self.transaction_type != TransactionType.OPENING_BALANCE:
             df_dict.update({
                 'description': self.description,
                 'from_account': self.from_account,

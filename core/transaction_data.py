@@ -1,6 +1,7 @@
 """
 TransactionData
 """
+from datetime import datetime
 from decimal import Decimal
 
 import pandas as pd
@@ -10,10 +11,17 @@ from dataclasses import dataclass
 from core.typings import RawTransactionData
 
 @dataclass
+class TransactionDataConfig:
+    opening_balance: Decimal
+    opening_date: datetime
+
+@dataclass
 class TransactionData:
     items: list[TransactionDataItem]
+    config: TransactionDataConfig
 
-    def __init__(self, data: RawTransactionData) -> None:
+    def __init__(self, data: RawTransactionData, config: TransactionDataConfig = None) -> None:
+        self.config = config
         self.items = []
         for item in data.items():
             self.items.append(TransactionDataItem(
@@ -28,22 +36,18 @@ class TransactionData:
         else:
             return pd.concat([tr.get_dataframe for tr in self.items], ignore_index=True)
 
-    def get_balance_data(self, initial_amount: Decimal) -> pd.DataFrame:
-        """
-        TODO: Improve
-        Inputs:
-            - Accounts?
-            - Scheduled or not?
-        """
-        if len(self.items) == 0:
-            return None
-
-        balance = initial_amount
-        data_list = [{
-            'diff': Decimal(0),
-            'balance': balance,
-            'date': self.items[0].date
-        }]
+    def get_balance_data(self) -> pd.DataFrame:
+        # TODO: Implement the filtering by scheduled
+        # TODO: Implement the filtering by accounts
+        balance = 0
+        data_list = []
+        if self.config is not None:
+            balance = self.config.opening_balance
+            data_list.append({
+                'diff': Decimal(0),
+                'balance': balance,
+                'date': self.config.opening_date
+            })
         for tr in self.items:
             diff = tr.get_balance()
             balance = balance + diff
@@ -53,5 +57,3 @@ class TransactionData:
                 'date': tr.date
             })
         return pd.DataFrame(data_list)
-
-        # TODO: Ensure that the min date is taken

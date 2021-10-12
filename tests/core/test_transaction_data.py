@@ -1,11 +1,13 @@
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+
+from piecash.core.transaction import Transaction
 from core.simple_transaction import SimpleTransaction
 from core.transaction_data_item import TransactionDataItem
 from core.typings import RawTransactionData
 from tests.test_piecash_helper import TestPiecashHelper
-from core.transaction_data import TransactionData
+from core.transaction_data import TransactionData, TransactionDataConfig
 import pytest
 
 @pytest.fixture(scope="class")
@@ -46,8 +48,19 @@ class TestTransactionData:
 
         assert len(result.get_dataframe()) == 0
 
+    def test_get_balance_data_with_config(self):
+        dic: RawTransactionData = dict([])
+        config = TransactionDataConfig(opening_balance=Decimal(400), opening_date=date(2000,11,10))
+        result = TransactionData(data=dic, config=config)
+
+        df = result.get_balance_data()
+        assert len(df) == 1
+        assert df['date'][0] == date(2000,11,10)
+        assert df['diff'][0] == Decimal(0)
+        assert df['balance'][0] == Decimal(400)
+
+
     @patch.object(TransactionDataItem, 'get_balance')
-    @pytest.mark.skip(reason="no way of currently testing this")
     def test_get_balance_data(self, mock_get_balance: MagicMock):
         mock_get_balance.return_value = Decimal(-1000)
 
@@ -58,15 +71,30 @@ class TestTransactionData:
             TransactionDataItem(date(2000, 10, 10), [], [])
         ]
 
-        df = result.get_balance_data(initial_amount=Decimal(2300))
+        df = result.get_balance_data()
 
-        # TODO: Should it contain always n + 1 (with the initial amount)
-        assert len(df) == 2
+        assert len(df) == 1
         assert len(df.columns) == 3
 
-        assert df['date'][0] == date(2000,10,9)
-        assert df['diff'][0] == Decimal(0)
-        assert df['balance'][0] == Decimal(2300)
+        assert df['date'][0] == date(2000,10,10)
+        assert df['diff'][0] == Decimal(-1000)
+        assert df['balance'][0] == Decimal(-1000)
+
+    @patch.object(TransactionDataItem, 'get_balance')
+    def test_get_balance_data(self, mock_get_balance: MagicMock):
+        mock_get_balance.return_value = Decimal(-1000)
+
+        dic: RawTransactionData = dict([])
+        config = TransactionDataConfig(opening_balance=Decimal(2300), opening_date=date(2000,11,10))
+        result = TransactionData(data=dic, config=config)
+
+        result.items = [
+            TransactionDataItem(date(2000, 10, 10), [], [])
+        ]
+
+        df = result.get_balance_data()
+
+        assert len(df) == 2
 
         assert df['date'][1] == date(2000,10,10)
         assert df['diff'][1] == Decimal(-1000)

@@ -2,22 +2,31 @@
 Transaction Journal
 """
 
-from datetime import date
+from dataclasses import dataclass
+from datetime import date, timedelta
+from decimal import Decimal
+from piecash.core.account import Account
 from piecash.core.book import Book
 from piecash.core.transaction import ScheduledTransaction, Transaction
 from sqlalchemy import or_
 from piecash._common import Recurrence
 import calendar
-from core.transaction_data import TransactionData
+from core.transaction_data import TransactionData, TransactionDataConfig
 
 from core.typings import RawTransactionData
 
 ScheduledTransactionOccurences = tuple[ScheduledTransaction, list[date]]
 
+@dataclass
+class TransactionJournalConfig:
+    checkings_parent_guid: str
+    # TODO: Check how do we handle the liability
+
 class TransactionJournal:
 
-    def __init__(self, book: Book) -> None:
+    def __init__(self, book: Book, config: TransactionJournalConfig = None) -> None:
         self.book = book
+        self.config = config
         pass
   
 
@@ -98,6 +107,9 @@ class TransactionJournal:
 
         return raw_data
 
+    def _get_account(self, guid: str) -> Account:
+        return self.book.query(Account).filter(Account.guid == guid).first()
+
     def get_recorded_transactions(self, start_date: date, end_date: date) -> list[Transaction]:
         """Get all the recorded sessions for the period"""
         return self.book.query(Transaction).filter(Transaction.post_date >= start_date, Transaction.post_date <= end_date).all()
@@ -127,6 +139,11 @@ class TransactionJournal:
 
         raw_data = self._get_raw_transaction_data(recorded=recorded, scheduled=scheduled)
 
-        return TransactionData(data=raw_data)
+        config = None
+        if self.config is not None:
+            checkings_account = self._get_account(guid=self.config.checkings_parent_guid)
+            previous_date = start_date - timedelta(days=1)
+            opening_balance = checkings_account.get_balance(at_date=previous_date)
+            config = TransactionDataConfig(opening_balance=opening_balance, opening_date=previous_date)
 
-
+        return TransactionData(data=raw_data, config=config)

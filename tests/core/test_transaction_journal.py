@@ -1,5 +1,9 @@
 from datetime import date
-from core.transaction_data import TransactionData
+from decimal import Decimal
+
+from piecash.core.account import Account
+from core.transaction_data import TransactionDataConfig
+from core.transaction_journal import TransactionJournalConfig
 from core.typings import RawTransactionData
 from tests.test_piecash_helper import TestPiecashHelper
 from piecash.core.transaction import ScheduledTransaction, Transaction
@@ -193,26 +197,50 @@ class TestTransactionJournal:
         ])
         assert result == expected
 
+    def test__get_account(self):
+        self.testClass._get_account(guid="ThisAccountGuid")
+
+        self.mockBook.session.query.return_value.filter.assert_called_once_with(
+            Account.guid == "ThisAccountGuid"
+        )
+
+    @patch.object(Account, 'get_balance')
+    @patch.object(TransactionJournal, '_get_account')
     @patch.object(TransactionJournal, '_get_raw_transaction_data')
     @patch.object(TransactionJournal, 'get_scheduled_transactions')
     @patch.object(TransactionJournal, 'get_recorded_transactions')
     def test_get_transaction_data(self, 
         mock_get_recorded_transactions: MagicMock,
         mock_get_scheduled_transactions: MagicMock,
-        mock__get_raw_transaction_data: MagicMock):
+        mock__get_raw_transaction_data: MagicMock,
+        mock__get_account: MagicMock,
+        mock_get_balance: MagicMock,
+        piecash_helper: TestPiecashHelper):
         # Arrange
-        cls = TransactionJournal(self.mockBook)
+        config = TransactionJournalConfig(checkings_parent_guid="abcdefsdfs")
+        cls = TransactionJournal(book=self.mockBook, config=config)
+
         assert cls.get_recorded_transactions is mock_get_recorded_transactions
         assert cls.get_scheduled_transactions is mock_get_scheduled_transactions
         assert cls._get_raw_transaction_data is mock__get_raw_transaction_data
+        assert cls._get_account is mock__get_account
+
+        checkings_account: Account = piecash_helper.get_checkings_account()
+        assert checkings_account.get_balance == mock_get_balance
 
         mock_get_recorded_transactions.return_value = 6666
         mock_get_scheduled_transactions.return_value = 7777
+        mock__get_account.return_value = checkings_account
+        mock_get_balance.return_value = Decimal(1234560)
 
         # Act
-        cls.get_transaction_data(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
+        data = cls.get_transaction_data(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
 
         # Test
         mock_get_recorded_transactions.assert_called_once_with(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
         mock_get_scheduled_transactions.assert_called_once_with(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
         mock__get_raw_transaction_data.assert_called_once_with(recorded=6666, scheduled=7777)
+        mock__get_account.assert_called_once_with(guid="abcdefsdfs")
+
+        assert data.config.opening_date == date(2000, 10, 9)
+        assert data.config.opening_balance == Decimal(1234560)

@@ -13,7 +13,7 @@ import pandas as pd
 
 def piecash_test():
     print('# Opening file')
-    book = piecash.open_book("/mnt/c/Users/guilh/Documents/Gnucash/test_sqllite/test_sqllite.gnucash")
+    book = piecash.open_book("/mnt/c/Users/guilh/Documents/Gnucash/test_sqllite/test_sqllite.gnucash", open_if_lock=True)
     journal = TransactionJournal(book)
     transactions = journal.get_recorded_transactions(date(2021, 10, 1), date(2021, 10, 30))
     scheduled_transactions = journal.get_scheduled_transactions(date(2021, 10, 1), date(2021, 10, 30))
@@ -52,5 +52,5 @@ def dash_test():
 
 if __name__ == "__main__":
     # execute only if run as a script
-    dash_test()
-    # piecash_test()
+    # dash_test()
+    piecash_test()
