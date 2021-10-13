@@ -9,6 +9,11 @@ from decimal import Decimal
 from piecash.core.transaction import ScheduledTransaction, Transaction
 
 @dataclass
+class Balance:
+    recorded: Decimal
+    scheduled: Decimal
+
+@dataclass
 class TransactionDataItem:
     date: datetime
     transactions: list[SimpleTransaction]
@@ -29,19 +34,26 @@ class TransactionDataItem:
             else:
                 self.transactions.append(SimpleTransaction.simplify_scheduled_record(sch))
 
-    def get_balance(self) -> Decimal:
+    def get_balance(self) -> Balance:
         expenses_balance: Decimal = Decimal('0')
         income_balance: Decimal = Decimal('0')
+        scheduled_expenses = Decimal(0)
+        scheduled_income = Decimal(0)
 
         for tr in self.transactions:
             if tr.transaction_type == TransactionType.EXPENSE:
-                expenses_balance = expenses_balance + tr.value
+                scheduled_expenses = scheduled_expenses + tr.value
+                if not tr.is_scheduled:
+                    expenses_balance = expenses_balance + tr.value
             elif tr.transaction_type == TransactionType.INCOME:
-                income_balance = income_balance + tr.value
+                scheduled_income = scheduled_income + tr.value
+                if not tr.is_scheduled:
+                    income_balance = income_balance + tr.value
 
         # TODO: Handle transfers
-            
-        return income_balance-expenses_balance
+        recorded = income_balance-expenses_balance
+        scheduled = scheduled_income - scheduled_expenses
+        return Balance(recorded=recorded, scheduled=scheduled)
 
     def get_dataframe(self) -> pd.DataFrame:
         if len(self.transactions) == 0:
