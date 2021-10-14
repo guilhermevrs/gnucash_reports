@@ -144,6 +144,9 @@ class TransactionJournal:
             checkings_account = self._get_account(guid=self.config.checkings_parent_guid)
             previous_date = start_date - timedelta(days=1)
             opening_balance = checkings_account.get_balance(at_date=previous_date)
-            config = TransactionDataConfig(opening_balance=opening_balance, opening_date=previous_date)
+            config = TransactionDataConfig(
+                opening_balance=opening_balance, 
+                opening_date=previous_date,
+                checkings_parent=checkings_account.fullname)
 
         return TransactionData(data=raw_data, config=config)

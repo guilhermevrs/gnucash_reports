@@ -14,6 +14,7 @@ from core.typings import RawTransactionData
 class TransactionDataConfig:
     opening_balance: Decimal
     opening_date: datetime
+    checkings_parent: str = None
 
 @dataclass
 class TransactionData:
@@ -37,11 +38,12 @@ class TransactionData:
             return pd.concat([tr.get_dataframe for tr in self.items], ignore_index=True)
 
     def get_balance_data(self) -> pd.DataFrame:
-        # TODO: Implement the filtering by accounts
         balance = 0
         scheduled_balance = 0
         data_list = []
+        checkings_parent = None
         if self.config is not None:
+            checkings_parent = self.config.checkings_parent
             balance = self.config.opening_balance
             scheduled_balance = self.config.opening_balance
             data_list.append({
@@ -51,7 +53,7 @@ class TransactionData:
                 'scheduled': False
             })
         for tr in self.items:
-            data = tr.get_balance()
+            data = tr.get_balance(checkings_parent=checkings_parent)
             balance = balance + data.recorded
             scheduled_balance = scheduled_balance + data.recorded
             data_list.append({

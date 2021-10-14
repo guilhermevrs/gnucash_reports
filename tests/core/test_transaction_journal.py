@@ -244,3 +244,4 @@ class TestTransactionJournal:
 
         assert data.config.opening_date == date(2000, 10, 9)
         assert data.config.opening_balance == Decimal(1234560)
+        assert data.config.checkings_parent == "Assets:Checkings"

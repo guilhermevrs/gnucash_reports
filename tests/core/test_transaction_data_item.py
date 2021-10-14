@@ -105,7 +105,7 @@ class TestTransactionDataItem:
         assert data_item.get_balance().scheduled == Decimal('123')
         assert data_item.get_balance().recorded == Decimal('0')
     
-    def test_get_balance_with_transfer(self, piecash_helper):
+    def test_get_balance_with_transfer_no_account(self, piecash_helper):
         # Test with recorded
         scheduled = []
         recorded = [
@@ -114,6 +114,22 @@ class TestTransactionDataItem:
         data_item = TransactionDataItem(date(2000, 10, 10), recorded, scheduled)
         assert data_item.get_balance().recorded == Decimal('0')
         assert data_item.get_balance().scheduled == Decimal('0')
+
+    def test_get_balance_with_transfer_with_account(self, piecash_helper):
+        # Test with recorded
+        scheduled = []
+        recorded = [
+            piecash_helper.get_recorded_transfer()
+        ]
+        data_item = TransactionDataItem(date(2000, 10, 10), recorded, scheduled)
+        assert data_item.get_balance(checkings_parent="Assets:Checkings").recorded == Decimal('-666')
+        assert data_item.get_balance(checkings_parent="Assets:Checkings").scheduled == Decimal('-666')
+
+        assert data_item.get_balance(checkings_parent="Assets:Savings").recorded == Decimal('666')
+        assert data_item.get_balance(checkings_parent="Assets:Savings").scheduled == Decimal('666')
+
+        assert data_item.get_balance(checkings_parent="Assets").recorded == Decimal('0')
+        assert data_item.get_balance(checkings_parent="Assets").scheduled == Decimal('0')
 
     def test_get_dataframe(self, piecash_helper: TestPiecashHelper):
         data_item = TransactionDataItem(date(2000,10,10), [], [])

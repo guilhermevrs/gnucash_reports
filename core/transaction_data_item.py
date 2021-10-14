@@ -34,23 +34,43 @@ class TransactionDataItem:
             else:
                 self.transactions.append(SimpleTransaction.simplify_scheduled_record(sch))
 
-    def get_balance(self) -> Balance:
+    def get_balance(self, checkings_parent:str = None) -> Balance:
         expenses_balance: Decimal = Decimal('0')
         income_balance: Decimal = Decimal('0')
         scheduled_expenses = Decimal(0)
         scheduled_income = Decimal(0)
 
+        def add_expense(val: Decimal):
+            nonlocal scheduled_expenses
+            nonlocal expenses_balance
+            
+            scheduled_expenses = scheduled_expenses + val
+            if not tr.is_scheduled:
+                expenses_balance = expenses_balance + val
+
+        def add_income(val: Decimal):
+            nonlocal scheduled_income
+            nonlocal income_balance
+
+            scheduled_income = scheduled_income + val
+            if not tr.is_scheduled:
+                income_balance = income_balance + val
+
         for tr in self.transactions:
             if tr.transaction_type == TransactionType.EXPENSE:
-                scheduled_expenses = scheduled_expenses + tr.value
-                if not tr.is_scheduled:
-                    expenses_balance = expenses_balance + tr.value
+                add_expense(tr.value)
             elif tr.transaction_type == TransactionType.INCOME:
-                scheduled_income = scheduled_income + tr.value
-                if not tr.is_scheduled:
-                    income_balance = income_balance + tr.value
-
-        # TODO: Handle transfers
+                add_income(tr.value)
+            elif tr.transaction_type == TransactionType.TRANSFER and checkings_parent is not None:
+                relevant_from = tr.from_account.startswith(checkings_parent)
+                relevant_to = tr.to_account.startswith(checkings_parent)
+                if relevant_from and not relevant_to :
+                    # Expense...
+                    add_expense(tr.value)
+                elif relevant_to and not relevant_from:
+                    # Income...
+                    add_income(tr.value)
+        
         recorded = income_balance-expenses_balance
         scheduled = scheduled_income - scheduled_expenses
         return Balance(recorded=recorded, scheduled=scheduled)

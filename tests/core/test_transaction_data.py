@@ -108,6 +108,21 @@ class TestTransactionData:
         assert df['scheduled'][1] == False
 
     @patch.object(TransactionDataItem, 'get_balance')
+    def test_get_balance_data_with_checkings_config(self, mock_get_balance: MagicMock):
+        dic: RawTransactionData = dict([])
+        config = TransactionDataConfig(opening_balance=Decimal(2300), opening_date=date(2000,11,10), checkings_parent="MY_CHECKINGS")
+        result = TransactionData(data=dic, config=config)
+
+        result.items = [
+            TransactionDataItem(date(2000, 10, 10), [], [])
+        ]
+
+        result.get_balance_data()
+
+        mock_get_balance.assert_called_with(checkings_parent="MY_CHECKINGS")
+
+        
+    @patch.object(TransactionDataItem, 'get_balance')
     def test_get_balance_data_with_scheduled(self, mock_get_balance: MagicMock):
         mock_get_balance.return_value = Balance(recorded=Decimal(-1000), scheduled=Decimal(-5000))
 
