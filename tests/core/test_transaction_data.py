@@ -152,3 +152,31 @@ class TestTransactionData:
         assert df['diff'][1] == Decimal(-5000)
         assert df['balance'][1] == Decimal(-6000)
         assert df['scheduled'][1] == True
+
+    @patch.object(TransactionDataItem, 'get_balance')
+    def test_get_balance_data_with_liability(self, mock_get_balance: MagicMock):
+        liability = Balance(recorded=Decimal(1000), scheduled=Decimal(5000))
+        mock_get_balance.return_value = BalanceData(liability=liability)
+
+        dic: RawTransactionData = dict([])
+        result = TransactionData(data=dic)
+
+        result.items = [
+            TransactionDataItem(date(2000, 10, 10), [], [])
+        ]
+
+        df = result.get_balance_data()
+
+        assert len(df) == 2
+
+        assert df['date'][0] == date(2000,10,10)
+        assert df['diff'][0] == Decimal(1000)
+        assert df['balance'][0] == Decimal(1000)
+        assert df['scheduled'][0] == False
+        assert df['type'][0] == BalanceType.LIABILITIES
+
+        assert df['date'][1] == date(2000,10,10)
+        assert df['diff'][1] == Decimal(5000)
+        assert df['balance'][1] == Decimal(6000)
+        assert df['scheduled'][1] == True
+        assert df['type'][0] == BalanceType.LIABILITIES

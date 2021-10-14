@@ -38,9 +38,12 @@ class TransactionData:
             return pd.concat([tr.get_dataframe for tr in self.items], ignore_index=True)
 
     def get_balance_data(self) -> pd.DataFrame:
-        balance = 0
-        scheduled_balance = 0
-        data_list = []
+        checkings = 0
+        scheduled_checkings = 0
+        liability = 0
+        scheduled_liability = 0
+        checkings_list = []
+        liabilities_list = []
         checkings_parent = None
 
         def newline(
@@ -51,42 +54,70 @@ class TransactionData:
             type: BalanceType = BalanceType.CHECKINGS
             ):
 
-            nonlocal data_list
-            data_list.append({
+            return {
                 'type': type,
                 'date': date,
                 'diff': diff,
                 'balance': balance,
                 'scheduled': scheduled
-            })
+            }
 
         if self.config is not None:
             checkings_parent = self.config.checkings_parent
-            balance = self.config.opening_balance
-            scheduled_balance = self.config.opening_balance
-            newline(
+            checkings = self.config.opening_balance
+            scheduled_checkings = self.config.opening_balance
+            checkings_list.append(newline(
                 date=self.config.opening_date,
                 balance=self.config.opening_balance
-            )
+            ))
             
         for tr in self.items:
-            data = tr.get_balance(checkings_parent=checkings_parent).checkings
-            balance = balance + data.recorded
-            scheduled_balance = scheduled_balance + data.recorded
-            newline(
-                date=tr.date,
-                balance=balance,
-                diff=data.recorded
-            )
+            balance_data = tr.get_balance(checkings_parent=checkings_parent)
+            checkings_data = balance_data.checkings
+            liabilities_data = balance_data.liability
 
-            if data.scheduled != data.recorded:
-                scheduled_balance = scheduled_balance + data.scheduled
+            if checkings_data is not None:
 
-            if scheduled_balance != balance:
-                newline(
+                checkings = checkings + checkings_data.recorded
+                scheduled_checkings = scheduled_checkings + checkings_data.recorded
+                checkings_list.append(newline(
                     date=tr.date,
-                    balance=scheduled_balance,
-                    diff=data.scheduled,
-                    scheduled=True
-                )
-        return pd.DataFrame(data_list)
+                    balance=checkings,
+                    diff=checkings_data.recorded
+                ))
+
+                if checkings_data.scheduled != checkings_data.recorded:
+                    scheduled_checkings = scheduled_checkings + checkings_data.scheduled
+
+                if scheduled_checkings != checkings:
+                    checkings_list.append(newline(
+                        date=tr.date,
+                        balance=scheduled_checkings,
+                        diff=checkings_data.scheduled,
+                        scheduled=True
+                    ))
+
+            if liabilities_data is not None:
+
+                liability = liability + liabilities_data.recorded
+                scheduled_liability = scheduled_liability + liabilities_data.recorded
+                liabilities_list.append(newline(
+                    date=tr.date,
+                    balance=liability,
+                    diff=liabilities_data.recorded,
+                    type=BalanceType.LIABILITIES
+                ))
+
+                if liabilities_data.scheduled != liabilities_data.recorded:
+                    scheduled_liability = scheduled_liability + liabilities_data.scheduled
+
+                if scheduled_liability != liability:
+                    liabilities_list.append(newline(
+                        date=tr.date,
+                        balance=scheduled_liability,
+                        diff=liabilities_data.scheduled,
+                        scheduled=True,
+                        type=BalanceType.LIABILITIES
+                    ))
+
+        return pd.DataFrame(checkings_list + liabilities_list)

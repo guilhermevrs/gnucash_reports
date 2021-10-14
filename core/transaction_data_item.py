@@ -40,46 +40,39 @@ class TransactionDataItem:
                 self.transactions.append(SimpleTransaction.simplify_scheduled_record(sch))
 
     def get_balance(self, checkings_parent:str = None) -> BalanceData:
-        expenses_balance: Decimal = Decimal('0')
-        income_balance: Decimal = Decimal('0')
-        scheduled_expenses = Decimal(0)
-        scheduled_income = Decimal(0)
+        # TODO: Filter by liability filter
+        checkings_balance = Balance(Decimal(0), Decimal(0))
+        liability_balance = Balance(Decimal(0), Decimal(0))
 
-        def add_expense(val: Decimal):
-            nonlocal scheduled_expenses
-            nonlocal expenses_balance
-            
-            scheduled_expenses = scheduled_expenses + val
-            if not tr.is_scheduled:
-                expenses_balance = expenses_balance + val
-
-        def add_income(val: Decimal):
-            nonlocal scheduled_income
-            nonlocal income_balance
-
-            scheduled_income = scheduled_income + val
-            if not tr.is_scheduled:
-                income_balance = income_balance + val
+        def add_checkings(val: Decimal, scheduled: bool):
+            checkings_balance.scheduled = checkings_balance.scheduled + val
+            if not scheduled:
+                checkings_balance.recorded = checkings_balance.recorded + val
+        
+        def add_liability(val: Decimal, scheduled: bool):
+            liability_balance.scheduled = liability_balance.scheduled + val
+            if not scheduled:
+                liability_balance.recorded = liability_balance.recorded + val
 
         for tr in self.transactions:
-            if tr.transaction_type == TransactionType.EXPENSE:
-                add_expense(tr.value)
+            if tr.transaction_type == TransactionType.LIABILITY:
+                add_liability(tr.value, tr.is_scheduled)
+            if tr.transaction_type == TransactionType.QUITTANCE:
+                add_liability(-tr.value, tr.is_scheduled)
+                add_checkings(-tr.value, tr.is_scheduled)
+            elif tr.transaction_type == TransactionType.EXPENSE:
+                add_checkings(-tr.value, tr.is_scheduled)
             elif tr.transaction_type == TransactionType.INCOME:
-                add_income(tr.value)
+                add_checkings(tr.value, tr.is_scheduled)
             elif tr.transaction_type == TransactionType.TRANSFER and checkings_parent is not None:
                 relevant_from = tr.from_account.startswith(checkings_parent)
                 relevant_to = tr.to_account.startswith(checkings_parent)
                 if relevant_from and not relevant_to :
-                    # Expense...
-                    add_expense(tr.value)
+                    add_checkings(-tr.value, tr.is_scheduled)
                 elif relevant_to and not relevant_from:
-                    # Income...
-                    add_income(tr.value)
+                    add_checkings(tr.value, tr.is_scheduled)
         
-        recorded = income_balance-expenses_balance
-        scheduled = scheduled_income - scheduled_expenses
-        checkings = Balance(recorded=recorded, scheduled=scheduled)
-        return BalanceData(checkings=checkings)
+        return BalanceData(checkings=checkings_balance, liability=liability_balance)
 
     def get_dataframe(self) -> pd.DataFrame:
         if len(self.transactions) == 0:

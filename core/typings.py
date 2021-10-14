@@ -7,3 +7,4 @@ RawTransactionData = dict[date, tuple[list[Transaction], list[ScheduledTransacti
 
 class BalanceType(Enum):
     CHECKINGS = "checkings"
+    LIABILITIES = "liabilities"

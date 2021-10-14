@@ -143,7 +143,6 @@ class TestTransactionDataItem:
         assert balance.checkings.recorded == Decimal('0')
         assert balance.checkings.scheduled == Decimal('0')
 
-    @pytest.mark.skip("Wait until checkings are ok")
     def test_get_balance_with_recorded_liabilities(self, piecash_helper: TestPiecashHelper):
         scheduled = []
         recorded = [
@@ -152,7 +151,18 @@ class TestTransactionDataItem:
         data_item = TransactionDataItem(date(2000, 10, 10), recorded, scheduled)
 
         balance = data_item.get_balance()
-        assert balance.liability.recorded == Decimal(-100)
+        assert balance.liability.recorded == Decimal(100)
+
+    def test_get_balance_with_recorded_quittances(self, piecash_helper: TestPiecashHelper):
+        scheduled = []
+        recorded = [
+            piecash_helper.get_credit_card_record()
+        ]
+        data_item = TransactionDataItem(date(2000, 10, 10), recorded, scheduled)
+
+        balance = data_item.get_balance()
+        assert balance.liability.recorded == Decimal(-50)
+        assert balance.checkings.recorded == Decimal(-50)
 
     def test_get_dataframe(self, piecash_helper: TestPiecashHelper):
         data_item = TransactionDataItem(date(2000,10,10), [], [])

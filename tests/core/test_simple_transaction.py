@@ -91,6 +91,18 @@ class TestSimpleTransaction:
         assert result.transaction_type == TransactionType.LIABILITY
         assert result.is_scheduled == False
         assert result.description == "ExpenseLiability"
+    
+    def test_simplify_quittance(self, piecash_helper:TestPiecashHelper):
+        transfer = piecash_helper.get_credit_card_record()
+        result = SimpleTransaction.simplify_record(transfer)
+        assert result.value == Decimal('50')
+        assert result.from_account == 'Assets:Checkings'
+        assert result.from_account_guid == '24b92fc00a9440c2856281f6eb093536'
+        assert result.to_account == 'Liabilities:Credit card'
+        assert result.to_account_guid == '755b41d407b94745aa463749cf462f23'
+        assert result.transaction_type == TransactionType.QUITTANCE
+        assert result.is_scheduled == False
+        assert result.description == "CheckingsExpenseCreditCard"
 
     def test_get_dataframe(self):
         transaction = SimpleTransaction(
