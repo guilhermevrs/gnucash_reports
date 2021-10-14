@@ -14,6 +14,11 @@ class Balance:
     scheduled: Decimal
 
 @dataclass
+class BalanceData:
+    checkings: Balance = None
+    liability: Balance = None
+
+@dataclass
 class TransactionDataItem:
     date: datetime
     transactions: list[SimpleTransaction]
@@ -34,7 +39,7 @@ class TransactionDataItem:
             else:
                 self.transactions.append(SimpleTransaction.simplify_scheduled_record(sch))
 
-    def get_balance(self, checkings_parent:str = None) -> Balance:
+    def get_balance(self, checkings_parent:str = None) -> BalanceData:
         expenses_balance: Decimal = Decimal('0')
         income_balance: Decimal = Decimal('0')
         scheduled_expenses = Decimal(0)
@@ -73,7 +78,8 @@ class TransactionDataItem:
         
         recorded = income_balance-expenses_balance
         scheduled = scheduled_income - scheduled_expenses
-        return Balance(recorded=recorded, scheduled=scheduled)
+        checkings = Balance(recorded=recorded, scheduled=scheduled)
+        return BalanceData(checkings=checkings)
 
     def get_dataframe(self) -> pd.DataFrame:
         if len(self.transactions) == 0:

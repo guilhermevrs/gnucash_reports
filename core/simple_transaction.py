@@ -8,6 +8,7 @@ from piecash.core.transaction import ScheduledTransaction, Split, Transaction
 
 class TransactionType(Enum):
     EXPENSE = "expense"
+    LIABILITY = "liability"
     INCOME = "income"
     TRANSFER = "transfer"
     OPENING_BALANCE = "opening_balance"
@@ -54,7 +55,10 @@ class SimpleTransaction:
         
         transaction_type: TransactionType
         if to_account.type == "LIABILITY" or to_account.type == "EXPENSE":
-            transaction_type = TransactionType.EXPENSE
+            if from_account.type == "LIABILITY":
+                transaction_type = TransactionType.LIABILITY
+            else:
+                transaction_type = TransactionType.EXPENSE
         elif to_account.type == "BANK" or to_account.type == "ASSET":
             if from_account.type == "BANK" or from_account.type == "ASSET":
                 transaction_type = TransactionType.TRANSFER
@@ -87,7 +91,10 @@ class SimpleTransaction:
         
         transaction_type: TransactionType
         if to_account.type == "LIABILITY" or to_account.type == "EXPENSE":
-            transaction_type = TransactionType.EXPENSE
+            if from_account.type == "LIABILITY":
+                transaction_type = TransactionType.LIABILITY
+            else:
+                transaction_type = TransactionType.EXPENSE
         elif to_account.type == "BANK" or to_account.type == "ASSET":
             if from_account.type == "BANK" or from_account.type == "ASSET":
                 transaction_type = TransactionType.TRANSFER

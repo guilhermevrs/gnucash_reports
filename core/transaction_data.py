@@ -8,7 +8,7 @@ import pandas as pd
 from core.transaction_data_item import TransactionDataItem
 from dataclasses import dataclass
 
-from core.typings import RawTransactionData
+from core.typings import BalanceType, RawTransactionData
 
 @dataclass
 class TransactionDataConfig:
@@ -42,35 +42,51 @@ class TransactionData:
         scheduled_balance = 0
         data_list = []
         checkings_parent = None
+
+        def newline(
+            date: datetime,
+            balance: Decimal,
+            scheduled: bool = False,
+            diff: Decimal = Decimal(0),
+            type: BalanceType = BalanceType.CHECKINGS
+            ):
+
+            nonlocal data_list
+            data_list.append({
+                'type': type,
+                'date': date,
+                'diff': diff,
+                'balance': balance,
+                'scheduled': scheduled
+            })
+
         if self.config is not None:
             checkings_parent = self.config.checkings_parent
             balance = self.config.opening_balance
             scheduled_balance = self.config.opening_balance
-            data_list.append({
-                'diff': Decimal(0),
-                'balance': balance,
-                'date': self.config.opening_date,
-                'scheduled': False
-            })
+            newline(
+                date=self.config.opening_date,
+                balance=self.config.opening_balance
+            )
+            
         for tr in self.items:
-            data = tr.get_balance(checkings_parent=checkings_parent)
+            data = tr.get_balance(checkings_parent=checkings_parent).checkings
             balance = balance + data.recorded
             scheduled_balance = scheduled_balance + data.recorded
-            data_list.append({
-                'diff': data.recorded,
-                'balance': balance,
-                'date': tr.date,
-                'scheduled': False
-            })
+            newline(
+                date=tr.date,
+                balance=balance,
+                diff=data.recorded
+            )
 
             if data.scheduled != data.recorded:
                 scheduled_balance = scheduled_balance + data.scheduled
 
             if scheduled_balance != balance:
-                data_list.append({
-                    'diff': data.scheduled,
-                    'balance': scheduled_balance,
-                    'date': tr.date,
-                    'scheduled': True
-                })
+                newline(
+                    date=tr.date,
+                    balance=scheduled_balance,
+                    diff=data.scheduled,
+                    scheduled=True
+                )
         return pd.DataFrame(data_list)

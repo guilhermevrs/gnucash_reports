@@ -66,6 +66,9 @@ class TestPiecashHelper:
     def get_scheduled_expense(self):
         return self.scheduled_transactions["SampledScheduled"]
 
+    def get_recorded_liability(self):
+        return self.recorded_transactions["ExpenseLiability"]
+
     def get_checkings_account(self):
         return self.accounts["Assets:Checkings"]
 

@@ -80,6 +80,18 @@ class TestSimpleTransaction:
         assert result.is_scheduled == True
         assert result.description == "ScheduledTransfer"
 
+    def test_simplify_liability(self, piecash_helper:TestPiecashHelper):
+        transfer = piecash_helper.get_recorded_liability()
+        result = SimpleTransaction.simplify_record(transfer)
+        assert result.value == Decimal('100')
+        assert result.from_account == 'Liabilities:Credit card'
+        assert result.from_account_guid == '755b41d407b94745aa463749cf462f23'
+        assert result.to_account == 'Expenses:Food'
+        assert result.to_account_guid == 'f0071228d4e34548be65bf42f1bcf0fa'
+        assert result.transaction_type == TransactionType.LIABILITY
+        assert result.is_scheduled == False
+        assert result.description == "ExpenseLiability"
+
     def test_get_dataframe(self):
         transaction = SimpleTransaction(
             value=0,
