@@ -245,3 +245,34 @@ class TestTransactionJournal:
         assert data.config.opening_date == date(2000, 10, 9)
         assert data.config.opening_balance == Decimal(1234560)
         assert data.config.checkings_parent == "Assets:Checkings"
+
+    @patch.object(Account, 'get_balance')
+    @patch.object(TransactionJournal, '_get_account')
+    @patch.object(TransactionJournal, '_get_raw_transaction_data')
+    @patch.object(TransactionJournal, 'get_scheduled_transactions')
+    @patch.object(TransactionJournal, 'get_recorded_transactions')
+    def test_get_transaction_data(self, 
+        mock_get_recorded_transactions: MagicMock,
+        mock_get_scheduled_transactions: MagicMock,
+        mock__get_raw_transaction_data: MagicMock,
+        mock__get_account: MagicMock,
+        mock_get_balance: MagicMock,
+        piecash_helper: TestPiecashHelper):
+        # Arrange
+        config = TransactionJournalConfig(checkings_parent_guid="abcdefsdfs", liabilities_parent_guid="11111111")
+        cls = TransactionJournal(book=self.mockBook, config=config)
+
+        checkings_account: Account = piecash_helper.get_checkings_account()
+        assert checkings_account.get_balance == mock_get_balance
+
+        mock__get_account.return_value = checkings_account
+        mock_get_balance.return_value = Decimal(11223)
+
+        # Act
+        data = cls.get_transaction_data(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
+
+        # Test
+        mock__get_account.assert_called_with(guid="11111111")
+
+        assert data.config.opening_date == date(2000, 10, 9)
+        assert data.config.opening_liability == Decimal(11223)

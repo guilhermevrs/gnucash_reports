@@ -180,3 +180,17 @@ class TestTransactionData:
         assert df['balance'][1] == Decimal(6000)
         assert df['scheduled'][1] == True
         assert df['type'][0] == BalanceType.LIABILITIES
+
+    def test_get_balance_data_with_open_liability(self):
+        dic: RawTransactionData = dict([])
+        config = TransactionDataConfig(opening_balance=Decimal(2300), opening_date=date(2000,11,10), opening_liability=Decimal(5000))
+        result = TransactionData(data=dic, config=config)
+
+        df = result.get_balance_data()
+        assert len(df) == 2
+
+        assert df['date'][1] == date(2000,11,10)
+        assert df['diff'][1] == Decimal(0)
+        assert df['balance'][1] == Decimal(5000)
+        assert df['scheduled'][1] == False
+        assert df['type'][1] == BalanceType.LIABILITIES

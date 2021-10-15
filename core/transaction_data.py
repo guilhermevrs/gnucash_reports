@@ -15,6 +15,7 @@ class TransactionDataConfig:
     opening_balance: Decimal
     opening_date: datetime
     checkings_parent: str = None
+    opening_liability: Decimal = None
 
 @dataclass
 class TransactionData:
@@ -70,6 +71,12 @@ class TransactionData:
                 date=self.config.opening_date,
                 balance=self.config.opening_balance
             ))
+            if self.config.opening_liability is not None:
+                liabilities_list.append(newline(
+                    date=self.config.opening_date,
+                    balance=self.config.opening_liability,
+                    type=BalanceType.LIABILITIES
+                ))
             
         for tr in self.items:
             balance_data = tr.get_balance(checkings_parent=checkings_parent)

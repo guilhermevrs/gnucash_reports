@@ -40,7 +40,6 @@ class TransactionDataItem:
                 self.transactions.append(SimpleTransaction.simplify_scheduled_record(sch))
 
     def get_balance(self, checkings_parent:str = None) -> BalanceData:
-        # TODO: Filter by liability filter
         checkings_balance = Balance(Decimal(0), Decimal(0))
         liability_balance = Balance(Decimal(0), Decimal(0))
 

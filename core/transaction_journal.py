@@ -20,7 +20,7 @@ ScheduledTransactionOccurences = tuple[ScheduledTransaction, list[date]]
 @dataclass
 class TransactionJournalConfig:
     checkings_parent_guid: str
-    # TODO: Check how do we handle the liability
+    liabilities_parent_guid: str = None
 
 class TransactionJournal:
 
@@ -144,9 +144,16 @@ class TransactionJournal:
             checkings_account = self._get_account(guid=self.config.checkings_parent_guid)
             previous_date = start_date - timedelta(days=1)
             opening_balance = checkings_account.get_balance(at_date=previous_date)
+
+            opening_liability = None
+            if self.config.liabilities_parent_guid is not None:
+                liability = self._get_account(guid=self.config.liabilities_parent_guid)
+                opening_liability = liability.get_balance(at_date=previous_date)
+
             config = TransactionDataConfig(
                 opening_balance=opening_balance, 
                 opening_date=previous_date,
-                checkings_parent=checkings_account.fullname)
+                checkings_parent=checkings_account.fullname,
+                opening_liability=opening_liability)
 
         return TransactionData(data=raw_data, config=config)
