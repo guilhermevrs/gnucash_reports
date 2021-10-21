@@ -1,21 +1,17 @@
 from decimal import Decimal
-from enum import Enum
 from dataclasses import dataclass
 import pandas as pd
 from piecash.core.account import Account
 
 from piecash.core.transaction import ScheduledTransaction, Split, Transaction
 
-class TransactionType(Enum):
-    EXPENSE = "expense"
-    LIABILITY = "liability"
-    QUITTANCE = "quittance"
-    INCOME = "income"
-    TRANSFER = "transfer"
-    OPENING_BALANCE = "opening_balance"
+from core.typings import TransactionType
 
 @dataclass
 class SimpleTransaction:
+    """
+    Describes a simplified transaction
+    """
     value: Decimal
     description: str = ""
     from_account: str = ""
@@ -26,6 +22,9 @@ class SimpleTransaction:
     is_scheduled: bool = False
 
     def get_dataframe(self) -> pd.DataFrame:
+        """
+        Returns a dataframe with the current data
+        """
         df_dict = {
             'value': self.value,
             'is_scheduled': self.is_scheduled
@@ -43,6 +42,9 @@ class SimpleTransaction:
 
     @classmethod
     def simplify_record(cls, tr: Transaction):
+        """
+        Simplify a Transaction object into SimpleTransaction
+        """
         value: Decimal
         from_account: Account
         to_account: Account
@@ -81,6 +83,9 @@ class SimpleTransaction:
 
     @classmethod
     def simplify_scheduled_record(cls, tr: ScheduledTransaction):
+        """
+        Simplify a ScheduledTransaction object into SimpleTransaction
+        """
         value: Decimal
         from_account: Account
         to_account: Account

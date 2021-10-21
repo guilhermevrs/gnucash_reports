@@ -1,17 +1,16 @@
-"""
-TransactionData
-"""
 from datetime import datetime
 from decimal import Decimal
 
 import pandas as pd
 from core.transaction_data_item import TransactionDataItem
-from dataclasses import dataclass
-
 from core.typings import BalanceType, RawTransactionData
+from dataclasses import dataclass
 
 @dataclass
 class TransactionDataConfig:
+    """
+    Configurations related to the transaction data
+    """
     opening_balance: Decimal
     opening_date: datetime
     checkings_parent: str = None
@@ -19,6 +18,9 @@ class TransactionDataConfig:
 
 @dataclass
 class TransactionData:
+    """
+    Data related to the transaction itself
+    """
     items: list[TransactionDataItem]
     config: TransactionDataConfig
 
@@ -33,12 +35,18 @@ class TransactionData:
             ))
 
     def get_dataframe(self) -> pd.DataFrame:
+        """
+        Returns the dataframe with the whole data
+        """
         if len(self.items) == 0:
             return pd.DataFrame()
         else:
             return pd.concat([tr.get_dataframe for tr in self.items], ignore_index=True)
 
     def get_balance_data(self) -> pd.DataFrame:
+        """
+        Returns a dataframe containing the balance per dates
+        """
         checkings = 0
         scheduled_checkings = 0
         liability = 0

@@ -1,5 +1,6 @@
 from decimal import Decimal
-from core.simple_transaction import SimpleTransaction, TransactionType
+from core.simple_transaction import SimpleTransaction
+from core.typings import TransactionType
 from tests.test_piecash_helper import TestPiecashHelper
 import pytest
 
@@ -9,6 +10,9 @@ def piecash_helper():
 
 class TestSimpleTransaction:
     def test_simplify_expense_record(self, piecash_helper):
+        """
+        should correctly simplify an expense record
+        """
         expense = piecash_helper.get_expense_record()
         result = SimpleTransaction.simplify_record(expense)
         assert result.value == Decimal('50')
@@ -21,6 +25,9 @@ class TestSimpleTransaction:
         assert result.description == "CheckingsExpenseFood1"
 
     def test_simplify_income_record(self, piecash_helper):
+        """
+        should correctly simplify an income record
+        """
         income = piecash_helper.get_income_record()
         result = SimpleTransaction.simplify_record(income)
         assert result.value == Decimal('400')
@@ -33,6 +40,9 @@ class TestSimpleTransaction:
         assert result.description == "CheckingsSalary1"
 
     def test_simplify_transfer_record(self, piecash_helper):
+        """
+        should correctly simplify a transfer record
+        """
         transfer = piecash_helper.get_recorded_transfer()
         result = SimpleTransaction.simplify_record(transfer)
         assert result.value == Decimal('666')
@@ -45,6 +55,9 @@ class TestSimpleTransaction:
         assert result.description == "CheckingsTransfer"
 
     def test_simplify_expense_scheduled(self, piecash_helper):
+        """
+        should correctly simplify a scheduled expense
+        """
         expense = piecash_helper.get_scheduled_expense()
         result = SimpleTransaction.simplify_scheduled_record(expense)
         assert result.value == Decimal('10')
@@ -57,6 +70,9 @@ class TestSimpleTransaction:
         assert result.description == "SampledScheduled"
 
     def test_simplify_income_scheduled(self, piecash_helper):
+        """
+        should correctly simplify a scheduled income
+        """
         income = piecash_helper.get_scheduled_income()
         result = SimpleTransaction.simplify_scheduled_record(income)
         assert result.value == Decimal('123')
@@ -69,6 +85,9 @@ class TestSimpleTransaction:
         assert result.description == "ScheduledIncome"
 
     def test_simplify_transfer_scheduled(self, piecash_helper):
+        """
+        should correctly simplify a scheduled transfer
+        """
         transfer = piecash_helper.get_scheduled_transfer()
         result = SimpleTransaction.simplify_scheduled_record(transfer)
         assert result.value == Decimal('546')
@@ -81,6 +100,9 @@ class TestSimpleTransaction:
         assert result.description == "ScheduledTransfer"
 
     def test_simplify_liability(self, piecash_helper:TestPiecashHelper):
+        """
+        should correctly simplify a liability record
+        """
         transfer = piecash_helper.get_recorded_liability()
         result = SimpleTransaction.simplify_record(transfer)
         assert result.value == Decimal('100')
@@ -93,6 +115,9 @@ class TestSimpleTransaction:
         assert result.description == "ExpenseLiability"
     
     def test_simplify_quittance(self, piecash_helper:TestPiecashHelper):
+        """
+        should correctly simplify a quittance record
+        """
         transfer = piecash_helper.get_credit_card_record()
         result = SimpleTransaction.simplify_record(transfer)
         assert result.value == Decimal('50')
@@ -105,6 +130,9 @@ class TestSimpleTransaction:
         assert result.description == "CheckingsExpenseCreditCard"
 
     def test_get_dataframe(self):
+        """
+        should correctly returns a dataframe row
+        """
         transaction = SimpleTransaction(
             value=0,
             description="Example",
@@ -120,6 +148,9 @@ class TestSimpleTransaction:
         assert len(df.columns) == 8
     
     def test_get_dataframe_balance(self):
+        """
+        should correctly set the value and is_scheduled columns
+        """
         transaction = SimpleTransaction(value=12)
         
         df = transaction.get_dataframe()

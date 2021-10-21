@@ -2,9 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from piecash.core.account import Account
-from core.transaction_data import TransactionDataConfig
-from core.transaction_journal import TransactionJournalConfig
-from core.typings import RawTransactionData
+from core import TransactionJournalConfig, RawTransactionData
 from tests.test_piecash_helper import TestPiecashHelper
 from piecash.core.transaction import ScheduledTransaction, Transaction
 import pytest
@@ -13,7 +11,7 @@ from core import TransactionJournal
 from piecash.core.book import Book
 from mock_alchemy.mocking import AlchemyMagicMock
 from mock_recurrence import MockRecurrence
-from unittest.mock import MagicMock, patch, Mock
+from unittest.mock import MagicMock, patch
 
 @pytest.fixture(scope="class")
 def piecash_helper():
@@ -31,19 +29,19 @@ class TestTransactionJournal:
         yield # this is where the testing happens
         # Teardown
 
-    def test_get_recorded_transactions(self):
+    def test__get_recorded_transactions(self):
         """should return recorded transactions inside a date range"""
         start_date = date(2021,9,10)
         end_date = date(2021,9,20)
-        self.testClass.get_recorded_transactions(start_date, end_date)
+        self.testClass._get_recorded_transactions(start_date, end_date)
         
         self.mockBook.session.query.return_value.filter.assert_called_once_with(Transaction.post_date >= start_date, Transaction.post_date <= end_date)
 
-    def test_get_scheduled_transactions_filter_candidates(self):
+    def test__get_scheduled_transactions_filter_candidates(self):
         """should return scheduled transactions enabled inside a date range"""
         start_date = date(2021,9,10)
         end_date = date(2021,9,20)
-        self.testClass.get_scheduled_transactions(start_date, end_date)
+        self.testClass._get_scheduled_transactions(start_date, end_date)
         
         self.mockBook.session.query.return_value.filter.assert_called_once_with(
             ScheduledTransaction.start_date >= start_date, 
@@ -198,6 +196,7 @@ class TestTransactionJournal:
         assert result == expected
 
     def test__get_account(self):
+        """should correctly query for an account"""
         self.testClass._get_account(guid="ThisAccountGuid")
 
         self.mockBook.session.query.return_value.filter.assert_called_once_with(
@@ -207,29 +206,30 @@ class TestTransactionJournal:
     @patch.object(Account, 'get_balance')
     @patch.object(TransactionJournal, '_get_account')
     @patch.object(TransactionJournal, '_get_raw_transaction_data')
-    @patch.object(TransactionJournal, 'get_scheduled_transactions')
-    @patch.object(TransactionJournal, 'get_recorded_transactions')
+    @patch.object(TransactionJournal, '_get_scheduled_transactions')
+    @patch.object(TransactionJournal, '_get_recorded_transactions')
     def test_get_transaction_data(self, 
-        mock_get_recorded_transactions: MagicMock,
-        mock_get_scheduled_transactions: MagicMock,
+        mock__get_recorded_transactions: MagicMock,
+        mock__get_scheduled_transactions: MagicMock,
         mock__get_raw_transaction_data: MagicMock,
         mock__get_account: MagicMock,
         mock_get_balance: MagicMock,
         piecash_helper: TestPiecashHelper):
+        """should call the correct internal methods to generate the data"""
         # Arrange
         config = TransactionJournalConfig(checkings_parent_guid="abcdefsdfs")
         cls = TransactionJournal(book=self.mockBook, config=config)
 
-        assert cls.get_recorded_transactions is mock_get_recorded_transactions
-        assert cls.get_scheduled_transactions is mock_get_scheduled_transactions
+        assert cls._get_recorded_transactions is mock__get_recorded_transactions
+        assert cls._get_scheduled_transactions is mock__get_scheduled_transactions
         assert cls._get_raw_transaction_data is mock__get_raw_transaction_data
         assert cls._get_account is mock__get_account
 
         checkings_account: Account = piecash_helper.get_checkings_account()
         assert checkings_account.get_balance == mock_get_balance
 
-        mock_get_recorded_transactions.return_value = 6666
-        mock_get_scheduled_transactions.return_value = 7777
+        mock__get_recorded_transactions.return_value = 6666
+        mock__get_scheduled_transactions.return_value = 7777
         mock__get_account.return_value = checkings_account
         mock_get_balance.return_value = Decimal(1234560)
 
@@ -237,8 +237,8 @@ class TestTransactionJournal:
         data = cls.get_transaction_data(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
 
         # Test
-        mock_get_recorded_transactions.assert_called_once_with(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
-        mock_get_scheduled_transactions.assert_called_once_with(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
+        mock__get_recorded_transactions.assert_called_once_with(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
+        mock__get_scheduled_transactions.assert_called_once_with(start_date=date(2000, 10, 10), end_date=date(2000, 11, 20))
         mock__get_raw_transaction_data.assert_called_once_with(recorded=6666, scheduled=7777)
         mock__get_account.assert_called_once_with(guid="abcdefsdfs")
 
@@ -249,15 +249,16 @@ class TestTransactionJournal:
     @patch.object(Account, 'get_balance')
     @patch.object(TransactionJournal, '_get_account')
     @patch.object(TransactionJournal, '_get_raw_transaction_data')
-    @patch.object(TransactionJournal, 'get_scheduled_transactions')
-    @patch.object(TransactionJournal, 'get_recorded_transactions')
-    def test_get_transaction_data(self, 
-        mock_get_recorded_transactions: MagicMock,
-        mock_get_scheduled_transactions: MagicMock,
+    @patch.object(TransactionJournal, '_get_scheduled_transactions')
+    @patch.object(TransactionJournal, '_get_recorded_transactions')
+    def test_get_transaction_data_with_config(self, 
+        mock__get_recorded_transactions: MagicMock,
+        mock__get_scheduled_transactions: MagicMock,
         mock__get_raw_transaction_data: MagicMock,
         mock__get_account: MagicMock,
         mock_get_balance: MagicMock,
         piecash_helper: TestPiecashHelper):
+        """should work correctly with configs"""
         # Arrange
         config = TransactionJournalConfig(checkings_parent_guid="abcdefsdfs", liabilities_parent_guid="11111111")
         cls = TransactionJournal(book=self.mockBook, config=config)

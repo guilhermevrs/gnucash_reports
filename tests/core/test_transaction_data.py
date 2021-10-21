@@ -2,12 +2,8 @@ from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from piecash.core.transaction import Transaction
-from core.simple_transaction import SimpleTransaction
-from core.transaction_data_item import Balance, BalanceData, TransactionDataItem
-from core.typings import BalanceType, RawTransactionData
+from core import Balance, BalanceData, TransactionDataItem, BalanceType, RawTransactionData, TransactionData, TransactionDataConfig
 from tests.test_piecash_helper import TestPiecashHelper
-from core.transaction_data import TransactionData, TransactionDataConfig
 import pytest
 
 @pytest.fixture(scope="class")
@@ -24,11 +20,13 @@ class TestTransactionData:
         # Teardown
 
     def test_load_from_empty_dic(self):
+        """should load an object from empty dictionary"""
         dic: RawTransactionData = dict([])
         result = TransactionData(data=dic)
         assert len(result.items) == 0
 
     def test_load_from_simple_dic(self, piecash_helper: TestPiecashHelper):
+        """should load an object based on a dictionary"""
         recorded_expense = piecash_helper.get_expense_record()
         scheduled_transfer = piecash_helper.get_scheduled_transfer()
         dic: RawTransactionData = dict([
@@ -43,12 +41,14 @@ class TestTransactionData:
         assert len(result.items[0].transactions) == 2
 
     def test_get_dataframe(self):
+        """should return an empty dataframe from an empty object"""
         dic: RawTransactionData = dict([])
         result = TransactionData(data=dic)
 
         assert len(result.get_dataframe()) == 0
 
     def test_get_balance_data_with_config_empty(self):
+        """should return the correct balance data for empty object with config"""
         dic: RawTransactionData = dict([])
         config = TransactionDataConfig(opening_balance=Decimal(400), opening_date=date(2000,11,10))
         result = TransactionData(data=dic, config=config)
@@ -64,6 +64,7 @@ class TestTransactionData:
 
     @patch.object(TransactionDataItem, 'get_balance')
     def test_get_balance_data_with_no_scheduled(self, mock_get_balance: MagicMock):
+        """should return the balance data when we have only the open config"""
         checkings = Balance(recorded=Decimal(-1000), scheduled=Decimal(-1000))
         mock_get_balance.return_value = BalanceData(checkings=checkings)
 
@@ -87,6 +88,7 @@ class TestTransactionData:
 
     @patch.object(TransactionDataItem, 'get_balance')
     def test_get_balance_data_with_config(self, mock_get_balance: MagicMock):
+        """should return the balance data for recorded tx + config"""
         checkings = Balance(recorded=Decimal(-1000), scheduled=Decimal(-1000))
         mock_get_balance.return_value = BalanceData(checkings=checkings)
 
@@ -114,6 +116,7 @@ class TestTransactionData:
 
     @patch.object(TransactionDataItem, 'get_balance')
     def test_get_balance_data_with_checkings_config(self, mock_get_balance: MagicMock):
+        """should indicate to the transaction items the checkings parent account"""
         dic: RawTransactionData = dict([])
         config = TransactionDataConfig(opening_balance=Decimal(2300), opening_date=date(2000,11,10), checkings_parent="MY_CHECKINGS")
         result = TransactionData(data=dic, config=config)
@@ -129,6 +132,7 @@ class TestTransactionData:
         
     @patch.object(TransactionDataItem, 'get_balance')
     def test_get_balance_data_with_scheduled(self, mock_get_balance: MagicMock):
+        """should return correct balance data when having scheduled data"""
         checkings = Balance(recorded=Decimal(-1000), scheduled=Decimal(-5000))
         mock_get_balance.return_value = BalanceData(checkings=checkings)
 
@@ -155,6 +159,7 @@ class TestTransactionData:
 
     @patch.object(TransactionDataItem, 'get_balance')
     def test_get_balance_data_with_liability(self, mock_get_balance: MagicMock):
+        """should return the correct balance for liability"""
         liability = Balance(recorded=Decimal(1000), scheduled=Decimal(5000))
         mock_get_balance.return_value = BalanceData(liability=liability)
 
@@ -182,6 +187,7 @@ class TestTransactionData:
         assert df['type'][0] == BalanceType.LIABILITIES
 
     def test_get_balance_data_with_open_liability(self):
+        """should return the correct balance when setting opening balance for liability"""
         dic: RawTransactionData = dict([])
         config = TransactionDataConfig(opening_balance=Decimal(2300), opening_date=date(2000,11,10), opening_liability=Decimal(5000))
         result = TransactionData(data=dic, config=config)

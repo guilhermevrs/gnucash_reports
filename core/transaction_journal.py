@@ -4,7 +4,6 @@ Transaction Journal
 
 from dataclasses import dataclass
 from datetime import date, timedelta
-from decimal import Decimal
 from piecash.core.account import Account
 from piecash.core.book import Book
 from piecash.core.transaction import ScheduledTransaction, Transaction
@@ -12,13 +11,15 @@ from sqlalchemy import or_
 from piecash._common import Recurrence
 import calendar
 from core.transaction_data import TransactionData, TransactionDataConfig
-
 from core.typings import RawTransactionData
 
 ScheduledTransactionOccurences = tuple[ScheduledTransaction, list[date]]
 
 @dataclass
 class TransactionJournalConfig:
+    """
+    Configurations related to the journal
+    """
     checkings_parent_guid: str
     liabilities_parent_guid: str = None
 
@@ -110,11 +111,11 @@ class TransactionJournal:
     def _get_account(self, guid: str) -> Account:
         return self.book.query(Account).filter(Account.guid == guid).first()
 
-    def get_recorded_transactions(self, start_date: date, end_date: date) -> list[Transaction]:
+    def _get_recorded_transactions(self, start_date: date, end_date: date) -> list[Transaction]:
         """Get all the recorded sessions for the period"""
         return self.book.query(Transaction).filter(Transaction.post_date >= start_date, Transaction.post_date <= end_date).all()
 
-    def get_scheduled_transactions(self, start_date: date, end_date: date) -> list[ScheduledTransactionOccurences]:
+    def _get_scheduled_transactions(self, start_date: date, end_date: date) -> list[ScheduledTransactionOccurences]:
         """Get a list of ScheduledTransactions with their lists of occurence dates"""
         raw_transactions: list[ScheduledTransaction] = self.book.query(
             ScheduledTransaction
@@ -134,8 +135,8 @@ class TransactionJournal:
 
     def get_transaction_data(self, start_date: date, end_date: date) -> TransactionData:
         """Gets the transaction data for a given period"""
-        recorded = self.get_recorded_transactions(start_date=start_date, end_date=end_date)
-        scheduled = self.get_scheduled_transactions(start_date=start_date, end_date=end_date)
+        recorded = self._get_recorded_transactions(start_date=start_date, end_date=end_date)
+        scheduled = self._get_scheduled_transactions(start_date=start_date, end_date=end_date)
 
         raw_data = self._get_raw_transaction_data(recorded=recorded, scheduled=scheduled)
 

@@ -1,25 +1,16 @@
-"""
-TransactionDataItem
-"""
 import pandas as pd
-from core.simple_transaction import SimpleTransaction, TransactionType
+from core.simple_transaction import SimpleTransaction
+from core.typings import TransactionType, Balance, BalanceData
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from piecash.core.transaction import ScheduledTransaction, Transaction
 
 @dataclass
-class Balance:
-    recorded: Decimal
-    scheduled: Decimal
-
-@dataclass
-class BalanceData:
-    checkings: Balance = None
-    liability: Balance = None
-
-@dataclass
 class TransactionDataItem:
+    """
+    Contains all the transactions (recorded or scheduled) for a given date
+    """
     date: datetime
     transactions: list[SimpleTransaction]
 
@@ -40,6 +31,9 @@ class TransactionDataItem:
                 self.transactions.append(SimpleTransaction.simplify_scheduled_record(sch))
 
     def get_balance(self, checkings_parent:str = None) -> BalanceData:
+        """
+        Returns the balance information for the date
+        """
         checkings_balance = Balance(Decimal(0), Decimal(0))
         liability_balance = Balance(Decimal(0), Decimal(0))
 
@@ -74,6 +68,9 @@ class TransactionDataItem:
         return BalanceData(checkings=checkings_balance, liability=liability_balance)
 
     def get_dataframe(self) -> pd.DataFrame:
+        """
+        Returns a dataframe containing all the information present
+        """
         if len(self.transactions) == 0:
             return pd.DataFrame()
         else:
