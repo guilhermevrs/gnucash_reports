@@ -15,6 +15,7 @@ from core.typings import RawTransactionData
 
 ScheduledTransactionOccurences = tuple[ScheduledTransaction, list[date]]
 
+
 @dataclass
 class TransactionJournalConfig:
     """
@@ -23,30 +24,36 @@ class TransactionJournalConfig:
     checkings_parent_guid: str
     liabilities_parent_guid: str = None
 
+
 class TransactionJournal:
 
     def __init__(self, book: Book, config: TransactionJournalConfig = None) -> None:
         self.book = book
         self.config = config
         pass
-  
 
-    def _get_monthly_recursive_occurences(self, recurrence:Recurrence, start_date: date, end_date: date) -> list[tuple[int, int]]:
+    def _get_monthly_recursive_occurences(
+            self,
+            recurrence: Recurrence,
+            start_date: date,
+            end_date: date) -> list[tuple[int, int]]:
         """Get the monthly occurences as a list of tuple(month, day)"""
         temp_year = 2000
-        temp_start = start_date.replace(year = temp_year)
-        temp_end = end_date.replace(year = temp_year)
-        temp_date = temp_start.replace(day = recurrence.recurrence_period_start.day)
+        temp_start = start_date.replace(year=temp_year)
+        temp_end = end_date.replace(year=temp_year)
+        temp_date = temp_start.replace(
+            day=recurrence.recurrence_period_start.day)
 
         month = recurrence.recurrence_period_start.month
         occurences = list()
         known_numbers = {}
         while month not in known_numbers:
             try:
-                temp_date = temp_date.replace(month = month, day = recurrence.recurrence_period_start.day)
-            except:
+                temp_date = temp_date.replace(
+                    month=month, day=recurrence.recurrence_period_start.day)
+            except Exception:
                 range = calendar.monthrange(temp_year, month)
-                temp_date = temp_date.replace(month = month, day = range[1])
+                temp_date = temp_date.replace(month=month, day=range[1])
             if temp_date >= temp_start and temp_date <= temp_end:
                 occurences.append((temp_date.month, temp_date.day))
             known_numbers[month] = True
@@ -64,21 +71,23 @@ class TransactionJournal:
             if (year >= start_date.year):
                 year_occurrences.append(year)
             year = year + recurrence.recurrence_mult
-        
+
         if len(year_occurrences) == 0:
             return []
 
         occurences = list()
-        monthOccurences = self._get_monthly_recursive_occurences(recurrence, start_date, end_date)
+        monthOccurences = self._get_monthly_recursive_occurences(
+            recurrence, start_date, end_date)
         for year in year_occurrences:
             for occ in monthOccurences:
-                    occurences.append(date(year, occ[0], occ[1]))
+                occurences.append(date(year, occ[0], occ[1]))
         return occurences
 
     def _get_recursive_occurences(self, recurrence: Recurrence, start_date: date, end_date: date) -> list[date]:
         """Get the list of dates based on the recurrence patterns"""
         if recurrence.recurrence_period_type == "month":
-            monthOccurences = self._get_monthly_recursive_occurences(recurrence, start_date, end_date)
+            monthOccurences = self._get_monthly_recursive_occurences(
+                recurrence, start_date, end_date)
             occurences = list()
             year = start_date.year
             while year <= end_date.year:
@@ -89,7 +98,10 @@ class TransactionJournal:
         else:
             return self._get_yearly_recursive_occurences(recurrence, start_date, end_date)
 
-    def _get_raw_transaction_data(self, recorded:list[Transaction] = [], scheduled:list[ScheduledTransactionOccurences] = []) -> RawTransactionData:
+    def _get_raw_transaction_data(
+            self,
+            recorded: list[Transaction] = [],
+            scheduled: list[ScheduledTransactionOccurences] = []) -> RawTransactionData:
         raw_data: RawTransactionData = dict()
         for tr in recorded:
             tr_date = tr.post_date
@@ -113,46 +125,57 @@ class TransactionJournal:
 
     def _get_recorded_transactions(self, start_date: date, end_date: date) -> list[Transaction]:
         """Get all the recorded sessions for the period"""
-        return self.book.query(Transaction).filter(Transaction.post_date >= start_date, Transaction.post_date <= end_date).all()
+        return self.book.query(Transaction).filter(
+            Transaction.post_date >= start_date,
+            Transaction.post_date <= end_date).all()
 
     def _get_scheduled_transactions(self, start_date: date, end_date: date) -> list[ScheduledTransactionOccurences]:
         """Get a list of ScheduledTransactions with their lists of occurence dates"""
         raw_transactions: list[ScheduledTransaction] = self.book.query(
             ScheduledTransaction
         ).filter(
-            ScheduledTransaction.start_date >= start_date, 
+            ScheduledTransaction.start_date >= start_date,
             ScheduledTransaction.start_date <= end_date,
-            or_(ScheduledTransaction.end_date >= end_date, ScheduledTransaction.end_date == None),
-            ScheduledTransaction.enabled == True
+            or_(ScheduledTransaction.end_date >= end_date,
+                ScheduledTransaction.end_date is None),
+            ScheduledTransaction.enabled is True
         ).all()
 
         transactions: list[ScheduledTransactionOccurences] = []
         for raw_tr in raw_transactions:
-            occurences = self._get_recursive_occurences(raw_tr.recurrence, start_date, end_date)
+            occurences = self._get_recursive_occurences(
+                raw_tr.recurrence, start_date, end_date)
             if len(occurences) > 0:
                 transactions.append((raw_tr, occurences))
         return transactions
 
     def get_transaction_data(self, start_date: date, end_date: date) -> TransactionData:
         """Gets the transaction data for a given period"""
-        recorded = self._get_recorded_transactions(start_date=start_date, end_date=end_date)
-        scheduled = self._get_scheduled_transactions(start_date=start_date, end_date=end_date)
+        recorded = self._get_recorded_transactions(
+            start_date=start_date, end_date=end_date)
+        scheduled = self._get_scheduled_transactions(
+            start_date=start_date, end_date=end_date)
 
-        raw_data = self._get_raw_transaction_data(recorded=recorded, scheduled=scheduled)
+        raw_data = self._get_raw_transaction_data(
+            recorded=recorded, scheduled=scheduled)
 
         config = None
         if self.config is not None:
-            checkings_account = self._get_account(guid=self.config.checkings_parent_guid)
+            checkings_account = self._get_account(
+                guid=self.config.checkings_parent_guid)
             previous_date = start_date - timedelta(days=1)
-            opening_balance = checkings_account.get_balance(at_date=previous_date)
+            opening_balance = checkings_account.get_balance(
+                at_date=previous_date)
 
             opening_liability = None
             if self.config.liabilities_parent_guid is not None:
-                liability = self._get_account(guid=self.config.liabilities_parent_guid)
-                opening_liability = liability.get_balance(at_date=previous_date)
+                liability = self._get_account(
+                    guid=self.config.liabilities_parent_guid)
+                opening_liability = liability.get_balance(
+                    at_date=previous_date)
 
             config = TransactionDataConfig(
-                opening_balance=opening_balance, 
+                opening_balance=opening_balance,
                 opening_date=previous_date,
                 checkings_parent=checkings_account.fullname,
                 opening_liability=opening_liability)

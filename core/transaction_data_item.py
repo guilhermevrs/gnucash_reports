@@ -6,6 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from piecash.core.transaction import ScheduledTransaction, Transaction
 
+
 @dataclass
 class TransactionDataItem:
     """
@@ -14,7 +15,10 @@ class TransactionDataItem:
     date: datetime
     transactions: list[SimpleTransaction]
 
-    def __init__(self, date: datetime, recorded: list[Transaction], scheduled: list[ScheduledTransaction]) -> None:
+    def __init__(
+            self, date: datetime,
+            recorded: list[Transaction] = [],
+            scheduled: list[ScheduledTransaction] = []) -> None:
         self.date = date
         self.transactions = []
         # Get all the guids from scheduled recorded
@@ -28,9 +32,10 @@ class TransactionDataItem:
             if sch.guid in sch_guids:
                 sch_guids.remove(sch.guid)
             else:
-                self.transactions.append(SimpleTransaction.simplify_scheduled_record(sch))
+                self.transactions.append(
+                    SimpleTransaction.simplify_scheduled_record(sch))
 
-    def get_balance(self, checkings_parent:str = None) -> BalanceData:
+    def get_balance(self, checkings_parent: str = None) -> BalanceData:
         """
         Returns the balance information for the date
         """
@@ -41,7 +46,7 @@ class TransactionDataItem:
             checkings_balance.scheduled = checkings_balance.scheduled + val
             if not scheduled:
                 checkings_balance.recorded = checkings_balance.recorded + val
-        
+
         def add_liability(val: Decimal, scheduled: bool):
             liability_balance.scheduled = liability_balance.scheduled + val
             if not scheduled:
@@ -57,15 +62,18 @@ class TransactionDataItem:
                 add_checkings(-tr.value, tr.is_scheduled)
             elif tr.transaction_type == TransactionType.INCOME:
                 add_checkings(tr.value, tr.is_scheduled)
-            elif tr.transaction_type == TransactionType.TRANSFER and checkings_parent is not None:
+            elif (tr.transaction_type == TransactionType.TRANSFER
+                    and checkings_parent is not None):
                 relevant_from = tr.from_account.startswith(checkings_parent)
                 relevant_to = tr.to_account.startswith(checkings_parent)
-                if relevant_from and not relevant_to :
+                if relevant_from and not relevant_to:
                     add_checkings(-tr.value, tr.is_scheduled)
                 elif relevant_to and not relevant_from:
                     add_checkings(tr.value, tr.is_scheduled)
-        
-        return BalanceData(checkings=checkings_balance, liability=liability_balance)
+
+        return BalanceData(
+            checkings=checkings_balance,
+            liability=liability_balance)
 
     def get_dataframe(self) -> pd.DataFrame:
         """
@@ -75,5 +83,6 @@ class TransactionDataItem:
             return pd.DataFrame()
         else:
             temp_dfs = [tr.get_dataframe() for tr in self.transactions]
-            df = pd.concat(temp_dfs, ignore_index=True).assign(date=lambda _: self.date)
+            df = pd.concat(temp_dfs, ignore_index=True).assign(
+                date=lambda _: self.date)
             return df

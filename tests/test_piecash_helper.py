@@ -8,6 +8,7 @@ from piecash.core.transaction import ScheduledTransaction, Transaction
 
 working_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
+
 class TestPiecashHelper:
 
     accounts: Dict[str, Account] = {}
@@ -16,7 +17,8 @@ class TestPiecashHelper:
     scheduled_records: Dict[str, Transaction] = {}
 
     def __init__(self) -> None:
-        smaple_data_path = os.path.join(os.path.realpath(working_dir + '/tests/fixtures'), 'sample_data.gnucash')
+        smaple_data_path = os.path.join(os.path.realpath(
+            working_dir + '/tests/fixtures'), 'sample_data.gnucash')
         book: Book = piecash.open_book(smaple_data_path, open_if_lock=True)
 
         scheduled = book.query(
@@ -24,7 +26,7 @@ class TestPiecashHelper:
         ).all()
 
         for acc in book.accounts:
-            self.accounts[acc.fullname] = acc;
+            self.accounts[acc.fullname] = acc
 
         for tr in book.transactions:
             if tr.scheduled_transaction is None:
@@ -35,13 +37,12 @@ class TestPiecashHelper:
         for tr in scheduled:
             self.scheduled_transactions[tr.name] = tr
 
-
     def get_record_previously_scheduled(self):
         return self.scheduled_records["ScheduledSplit1"]
 
     def get_expense_record(self):
         return self.recorded_transactions["CheckingsExpenseFood1"]
-    
+
     def get_income_record(self):
         return self.recorded_transactions["CheckingsSalary1"]
 
@@ -56,7 +57,7 @@ class TestPiecashHelper:
 
     def get_scheduled_income(self):
         return self.scheduled_transactions["ScheduledIncome"]
-    
+
     def get_recorded_transfer(self):
         return self.recorded_transactions["CheckingsTransfer"]
 
@@ -71,5 +72,6 @@ class TestPiecashHelper:
 
     def get_checkings_account(self):
         return self.accounts["Assets:Checkings"]
+
 
 TestPiecashHelper.__test__ = False

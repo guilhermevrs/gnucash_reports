@@ -4,9 +4,11 @@ from core.typings import TransactionType
 from tests.test_piecash_helper import TestPiecashHelper
 import pytest
 
+
 @pytest.fixture(scope="class")
 def piecash_helper():
     return TestPiecashHelper()
+
 
 class TestSimpleTransaction:
     def test_simplify_expense_record(self, piecash_helper):
@@ -21,7 +23,7 @@ class TestSimpleTransaction:
         assert result.to_account == 'Expenses:Food'
         assert result.to_account_guid == 'f0071228d4e34548be65bf42f1bcf0fa'
         assert result.transaction_type == TransactionType.EXPENSE
-        assert result.is_scheduled == False
+        assert result.is_scheduled is False
         assert result.description == "CheckingsExpenseFood1"
 
     def test_simplify_income_record(self, piecash_helper):
@@ -36,7 +38,7 @@ class TestSimpleTransaction:
         assert result.to_account == 'Assets:Checkings'
         assert result.to_account_guid == '24b92fc00a9440c2856281f6eb093536'
         assert result.transaction_type == TransactionType.INCOME
-        assert result.is_scheduled == False
+        assert result.is_scheduled is False
         assert result.description == "CheckingsSalary1"
 
     def test_simplify_transfer_record(self, piecash_helper):
@@ -51,7 +53,7 @@ class TestSimpleTransaction:
         assert result.to_account == 'Assets:Savings'
         assert result.to_account_guid == 'd4295e1f81ce43ad8bdfa31ec5f38f88'
         assert result.transaction_type == TransactionType.TRANSFER
-        assert result.is_scheduled == False
+        assert result.is_scheduled is False
         assert result.description == "CheckingsTransfer"
 
     def test_simplify_expense_scheduled(self, piecash_helper):
@@ -66,7 +68,7 @@ class TestSimpleTransaction:
         assert result.to_account == 'Expenses:Food'
         assert result.to_account_guid == 'f0071228d4e34548be65bf42f1bcf0fa'
         assert result.transaction_type == TransactionType.EXPENSE
-        assert result.is_scheduled == True
+        assert result.is_scheduled is True
         assert result.description == "SampledScheduled"
 
     def test_simplify_income_scheduled(self, piecash_helper):
@@ -81,7 +83,7 @@ class TestSimpleTransaction:
         assert result.to_account == 'Assets:Checkings'
         assert result.to_account_guid == '24b92fc00a9440c2856281f6eb093536'
         assert result.transaction_type == TransactionType.INCOME
-        assert result.is_scheduled == True
+        assert result.is_scheduled is True
         assert result.description == "ScheduledIncome"
 
     def test_simplify_transfer_scheduled(self, piecash_helper):
@@ -96,10 +98,10 @@ class TestSimpleTransaction:
         assert result.to_account == 'Assets:Savings'
         assert result.to_account_guid == 'd4295e1f81ce43ad8bdfa31ec5f38f88'
         assert result.transaction_type == TransactionType.TRANSFER
-        assert result.is_scheduled == True
+        assert result.is_scheduled is True
         assert result.description == "ScheduledTransfer"
 
-    def test_simplify_liability(self, piecash_helper:TestPiecashHelper):
+    def test_simplify_liability(self, piecash_helper: TestPiecashHelper):
         """
         should correctly simplify a liability record
         """
@@ -111,10 +113,10 @@ class TestSimpleTransaction:
         assert result.to_account == 'Expenses:Food'
         assert result.to_account_guid == 'f0071228d4e34548be65bf42f1bcf0fa'
         assert result.transaction_type == TransactionType.LIABILITY
-        assert result.is_scheduled == False
+        assert result.is_scheduled is False
         assert result.description == "ExpenseLiability"
-    
-    def test_simplify_quittance(self, piecash_helper:TestPiecashHelper):
+
+    def test_simplify_quittance(self, piecash_helper: TestPiecashHelper):
         """
         should correctly simplify a quittance record
         """
@@ -126,7 +128,7 @@ class TestSimpleTransaction:
         assert result.to_account == 'Liabilities:Credit card'
         assert result.to_account_guid == '755b41d407b94745aa463749cf462f23'
         assert result.transaction_type == TransactionType.QUITTANCE
-        assert result.is_scheduled == False
+        assert result.is_scheduled is False
         assert result.description == "CheckingsExpenseCreditCard"
 
     def test_get_dataframe(self):
@@ -136,25 +138,25 @@ class TestSimpleTransaction:
         transaction = SimpleTransaction(
             value=0,
             description="Example",
-            from_account="Account1", 
-            from_account_guid="Account1Guid", 
-            to_account="Account2", 
-            to_account_guid="Account2Guid", 
-            transaction_type=TransactionType.EXPENSE, 
+            from_account="Account1",
+            from_account_guid="Account1Guid",
+            to_account="Account2",
+            to_account_guid="Account2Guid",
+            transaction_type=TransactionType.EXPENSE,
             is_scheduled=False)
-        
+
         df = transaction.get_dataframe()
 
         assert len(df.columns) == 8
-    
+
     def test_get_dataframe_balance(self):
         """
         should correctly set the value and is_scheduled columns
         """
         transaction = SimpleTransaction(value=12)
-        
+
         df = transaction.get_dataframe()
 
         assert len(df.columns) == 2
         assert df["value"][0] == 12
-        assert df["is_scheduled"][0] == False
+        assert not df["is_scheduled"][0]

@@ -7,6 +7,7 @@ from piecash.core.transaction import ScheduledTransaction, Split, Transaction
 
 from core.typings import TransactionType
 
+
 @dataclass
 class SimpleTransaction:
     """
@@ -55,7 +56,7 @@ class SimpleTransaction:
                 value = split.value
             elif split.is_credit:
                 from_account = split.account
-        
+
         transaction_type: TransactionType
 
         if to_account.type == "LIABILITY":
@@ -72,13 +73,13 @@ class SimpleTransaction:
                 transaction_type = TransactionType.INCOME
 
         return cls(
-            value = value,
-            description = tr.description,
-            from_account = from_account.fullname,
-            from_account_guid = from_account.guid,
-            to_account = to_account.fullname,
-            to_account_guid = to_account.guid,
-            transaction_type = transaction_type
+            value=value,
+            description=tr.description,
+            from_account=from_account.fullname,
+            from_account_guid=from_account.guid,
+            to_account=to_account.fullname,
+            to_account_guid=to_account.guid,
+            transaction_type=transaction_type
         )
 
     @classmethod
@@ -97,7 +98,7 @@ class SimpleTransaction:
                 value = slots["debit-numeric"].value
             elif slots["credit-formula"].value != "":
                 from_account = slots["account"].value
-        
+
         transaction_type: TransactionType
         if to_account.type == "LIABILITY" or to_account.type == "EXPENSE":
             if from_account.type == "LIABILITY":
@@ -111,12 +112,12 @@ class SimpleTransaction:
                 transaction_type = TransactionType.INCOME
 
         return cls(
-            value = value,
-            description = tr.name,
-            from_account = from_account.fullname,
-            from_account_guid = from_account.guid,
-            to_account = to_account.fullname,
-            to_account_guid = to_account.guid,
-            transaction_type = transaction_type,
-            is_scheduled = True
+            value=value,
+            description=tr.name,
+            from_account=from_account.fullname,
+            from_account_guid=from_account.guid,
+            to_account=to_account.fullname,
+            to_account_guid=to_account.guid,
+            transaction_type=transaction_type,
+            is_scheduled=True
         )

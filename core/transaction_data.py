@@ -6,6 +6,7 @@ from core.transaction_data_item import TransactionDataItem
 from core.typings import BalanceType, RawTransactionData
 from dataclasses import dataclass
 
+
 @dataclass
 class TransactionDataConfig:
     """
@@ -16,6 +17,7 @@ class TransactionDataConfig:
     checkings_parent: str = None
     opening_liability: Decimal = None
 
+
 @dataclass
 class TransactionData:
     """
@@ -24,14 +26,17 @@ class TransactionData:
     items: list[TransactionDataItem]
     config: TransactionDataConfig
 
-    def __init__(self, data: RawTransactionData, config: TransactionDataConfig = None) -> None:
+    def __init__(
+            self,
+            data: RawTransactionData,
+            config: TransactionDataConfig = None) -> None:
         self.config = config
         self.items = []
         for item in data.items():
             self.items.append(TransactionDataItem(
-                date = item[0],
-                recorded = item[1][0],
-                scheduled = item[1][1]
+                date=item[0],
+                recorded=item[1][0],
+                scheduled=item[1][1]
             ))
 
     def get_dataframe(self) -> pd.DataFrame:
@@ -41,7 +46,9 @@ class TransactionData:
         if len(self.items) == 0:
             return pd.DataFrame()
         else:
-            return pd.concat([tr.get_dataframe for tr in self.items], ignore_index=True)
+            return pd.concat(
+                [tr.get_dataframe for tr in self.items],
+                ignore_index=True)
 
     def get_balance_data(self) -> pd.DataFrame:
         """
@@ -61,7 +68,7 @@ class TransactionData:
             scheduled: bool = False,
             diff: Decimal = Decimal(0),
             type: BalanceType = BalanceType.CHECKINGS
-            ):
+        ):
 
             return {
                 'type': type,
@@ -85,7 +92,7 @@ class TransactionData:
                     balance=self.config.opening_liability,
                     type=BalanceType.LIABILITIES
                 ))
-            
+
         for tr in self.items:
             balance_data = tr.get_balance(checkings_parent=checkings_parent)
             checkings_data = balance_data.checkings

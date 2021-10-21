@@ -12,7 +12,9 @@ from piecash.core.transaction import ScheduledTransaction, Transaction
 """
 Describes the raw data needed to create a TransactionData
 """
-RawTransactionData = dict[date, tuple[list[Transaction], list[ScheduledTransaction]]]
+RawTransactionData = dict[date,
+                          tuple[list[Transaction], list[ScheduledTransaction]]]
+
 
 class BalanceType(Enum):
     """
@@ -20,6 +22,7 @@ class BalanceType(Enum):
     """
     CHECKINGS = "checkings"
     LIABILITIES = "liabilities"
+
 
 class TransactionType(Enum):
     """
@@ -32,6 +35,7 @@ class TransactionType(Enum):
     TRANSFER = "transfer"
     OPENING_BALANCE = "opening_balance"
 
+
 @dataclass
 class Balance:
     """
@@ -39,6 +43,7 @@ class Balance:
     """
     recorded: Decimal
     scheduled: Decimal
+
 
 @dataclass
 class BalanceData:
