@@ -1,14 +1,15 @@
 import pytest
-from components.base_block import BaseBlock, BaseBlockConfig
+from components.base_block import BaseComponent, BaseComponentConfig
 from unittest.mock import patch, MagicMock
+from dash import html
 
 
-class ChildClass(BaseBlock):
+class ChildClass(BaseComponent):
     def callbacks():
         pass
 
 
-class TestBaseBlock:
+class TestBaseComponent:
 
     @pytest.fixture(autouse=True)
     def before_each(self):
@@ -19,14 +20,14 @@ class TestBaseBlock:
 
     def test_empty_constructor(self):
         """should work with empty constructor"""
-        baseBlock = BaseBlock()
+        baseBlock = BaseComponent()
         assert baseBlock is not None
 
     @patch('dash.Dash')
     def test_pass_app_to_constructor(self, MockDash: MagicMock):
         """should correctly assign the app if passed to constructor"""
         mockApp = MockDash()
-        baseBlock = BaseBlock(app=mockApp)
+        baseBlock = BaseComponent(app=mockApp)
         assert baseBlock.app == mockApp
 
     @patch.object(ChildClass, "callbacks")
@@ -45,15 +46,37 @@ class TestBaseBlock:
 
     def test_pass_config_to_constructor(self):
         """should correctly assign the app if passed to constructor"""
-        config = BaseBlockConfig(prefix="test")
-        baseBlock = BaseBlock(config=config)
+        config = BaseComponentConfig(prefix="test")
+        baseBlock = BaseComponent(config=config)
         assert baseBlock.config == config
 
     def test_prefix(self):
-        config = BaseBlockConfig(prefix="myprefix")
-        baseBlock = BaseBlock(config=config)
+        """should correctly prefix with the configured prefix"""
+        config = BaseComponentConfig(prefix="myprefix")
+        baseBlock = BaseComponent(config=config)
         assert baseBlock.prefix("component") == "myprefix-component"
 
     def test_prefix_name_when_no_config(self):
-        baseBlock = BaseBlock()
-        assert baseBlock.get_prefixed_name("component") == "component"
+        """should return the string as it is, since no config"""
+        baseBlock = BaseComponent()
+        assert baseBlock.prefix("component") == "component"
+
+    def test_prefix_from_child_when_no_config(self):
+        """should return the string as it is, since no config"""
+        baseBlock = ChildClass()
+        assert baseBlock.prefix("component") == "component"
+
+    @patch.object(BaseComponent, "render")
+    @patch("dash.Dash")
+    def test_call_render_on_init(self, MockDash: MagicMock, mock_callback: MagicMock):
+        """should call the render method on init"""
+        expected = html.Div(children=["My Test"])
+        mock_callback.return_value = expected
+
+        mockApp = MockDash()
+        c = BaseComponent(app=mockApp)
+        mock_callback.assert_called_once()
+
+        assert c.layout == expected
+
+

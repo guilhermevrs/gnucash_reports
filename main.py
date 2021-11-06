@@ -1,32 +1,22 @@
 from datetime import date
-from core.simple_transaction import SimpleTransaction, TransactionType
 from core.transaction_journal import TransactionJournal, TransactionJournalConfig
 import piecash
-from piecash.core.transaction import ScheduledTransaction
 
 import dash
 from dash import html, dcc
 import plotly.graph_objects as go
+import pandas as pd
 
-# Scheduled: credit is when you lose, debit is when you receive
+from components import ForecastComponent, ForecastComponentInput
+from core.typings import BalanceType
 
-def piecash_test():
-    print('# Opening file')
-    book = piecash.open_book("/mnt/c/Users/guilh/Documents/Gnucash/test_sqllite/test_sqllite.gnucash", open_if_lock=True)
-    journal = TransactionJournal(book)
-    transactions = journal.get_recorded_transactions(date(2021, 10, 1), date(2021, 10, 30))
-    scheduled_transactions = journal.get_scheduled_transactions(date(2021, 10, 1), date(2021, 10, 30))
-    for acc in book.root_account.children:
-        print(acc)
-    scheduled = book.get(ScheduledTransaction)
-    for tr in scheduled.all():
-        print(tr)
 
 def dash_test():
 
     app = dash.Dash(__name__)
 
-    book = piecash.open_book("/mnt/c/Users/guilh/Documents/Gnucash/test_sqllite/test_sqllite.gnucash", open_if_lock=True)
+    book = piecash.open_book(
+        "/mnt/c/Users/guilh/Documents/Gnucash/test_sqllite/test_sqllite.gnucash", open_if_lock=True)
     config = TransactionJournalConfig(checkings_parent_guid="3838edd7804247868ebed2d2404d4c26")
     journal = TransactionJournal(book=book, config=config)
 
@@ -35,7 +25,7 @@ def dash_test():
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=df["date"], y=df["balance"], name="Balance",
-                    line_shape='hv'))
+                             line_shape='hv'))
 
     app.layout = html.Div(children=[
         html.H1(children='Test'),
@@ -50,9 +40,34 @@ def dash_test():
         )
     ])
     app.run_server(debug=True)
- 
+
+
+def component_test():
+    app = dash.Dash(__name__)
+
+    d = {
+            'date': [1, 2, 3, 4, 5, 6, 7],
+            'balance': [100, 120, 130, 150, 175, 183, 196],
+            'type': [
+                BalanceType.CHECKINGS,
+                BalanceType.LIABILITIES,
+                BalanceType.CHECKINGS,
+                BalanceType.CHECKINGS,
+                BalanceType.LIABILITIES,
+                BalanceType.CHECKINGS,
+                BalanceType.LIABILITIES
+            ],
+            'scheduled': [False, False, True, False, True, True, True]
+        }
+    data = pd.DataFrame(data=d)
+
+    c = ForecastComponent(app=app, input=ForecastComponentInput(data=data))
+    app.layout = c.layout
+    app.run_server(debug=True)
+
 
 if __name__ == "__main__":
     # execute only if run as a script
-    dash_test()
+    # dash_test()
     # piecash_test()
+    component_test()
