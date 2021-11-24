@@ -38,25 +38,40 @@ class TransactionJournal:
             start_date: date,
             end_date: date) -> list[tuple[int, int]]:
         """Get the monthly occurences as a list of tuple(month, day)"""
-        temp_year = 2000
-        temp_start = start_date.replace(year=temp_year)
-        temp_end = end_date.replace(year=temp_year)
-        temp_date = temp_start.replace(
-            day=recurrence.recurrence_period_start.day)
 
+        revert = False if (end_date.month >= start_date.month) else True
+        same_month = start_date.month == end_date.month
+
+        day = recurrence.recurrence_period_start.day
         month = recurrence.recurrence_period_start.month
+        known_months = list()
         occurences = list()
-        known_numbers = {}
-        while month not in known_numbers:
-            try:
-                temp_date = temp_date.replace(
-                    month=month, day=recurrence.recurrence_period_start.day)
-            except Exception:
-                range = calendar.monthrange(temp_year, month)
-                temp_date = temp_date.replace(month=month, day=range[1])
-            if temp_date >= temp_start and temp_date <= temp_end:
-                occurences.append((temp_date.month, temp_date.day))
-            known_numbers[month] = True
+        while month not in known_months:
+            known_months.append(month)
+            add_occurence = False
+
+            if month == start_date.month or month == end_date.month:
+                # If the month is in the border, need to test the day
+                if same_month:
+                    # If both start and end are the same month, day needs to be in range
+                    if day >= start_date.day and day <= end_date.day:
+                        add_occurence = True
+                else:
+                    # Otherwise, each "border" defines the upper or lower bound
+                    if month == start_date.month and day >= start_date.day:
+                        add_occurence = True
+                    elif month == end_date.month and day <= end_date.day:
+                        add_occurence = True
+
+            else:
+                in_range = month > start_date.month and month < end_date.month
+                in_revert_range = month > start_date.month or month < end_date.month
+                if (not revert and in_range) or (revert and in_revert_range):
+                    add_occurence = True
+
+            if add_occurence:
+                occurences.append((month, day))
+
             month = month + recurrence.recurrence_mult
             if month > 12:
                 month = month - 12
@@ -83,20 +98,48 @@ class TransactionJournal:
                 occurences.append(date(year, occ[0], occ[1]))
         return occurences
 
+    def _get_next_recursive_occurence(self, recurrence: Recurrence, previous_date: date = None):
+        if previous_date is None:
+            return recurrence.recurrence_period_start
+
+        month = month = previous_date.month
+        year = previous_date.year
+        day = previous_date.day
+        if "month" in recurrence.recurrence_period_type:
+            month = month + recurrence.recurrence_mult
+            if month > 12:
+                month = month - 12
+                year = year + 1
+            if recurrence.recurrence_period_type == "end_of_month":
+                # Get the last day
+                range = calendar.monthrange(year, month)
+                day = range[1]
+        elif "year" == recurrence.recurrence_period_type:
+            year = year + recurrence.recurrence_mult
+        else:
+            raise AttributeError("Unknown '{}' as period of recurrence".format(recurrence.recurrence_period_type))
+
+        try:
+            new_date = date(year, month, day)
+        except Exception:
+            range = calendar.monthrange(year, month)
+            new_date = date(year, month, range[1])
+
+        return new_date
+
     def _get_recursive_occurences(self, recurrence: Recurrence, start_date: date, end_date: date) -> list[date]:
         """Get the list of dates based on the recurrence patterns"""
-        if recurrence.recurrence_period_type == "month":
-            monthOccurences = self._get_monthly_recursive_occurences(
-                recurrence, start_date, end_date)
-            occurences = list()
-            year = start_date.year
-            while year <= end_date.year:
-                for occ in monthOccurences:
-                    occurences.append(date(year, occ[0], occ[1]))
-                year = year + 1
-            return occurences
-        else:
-            return self._get_yearly_recursive_occurences(recurrence, start_date, end_date)
+        occurences = list()
+
+        recursive_it = self._get_next_recursive_occurence(recurrence)
+        keep_searching = True
+        while keep_searching:
+            if recursive_it >= start_date and recursive_it <= end_date:
+                occurences.append(recursive_it)
+            recursive_it = self._get_next_recursive_occurence(recurrence, recursive_it)
+            keep_searching = recursive_it <= end_date
+
+        return occurences
 
     def _get_raw_transaction_data(
             self,
@@ -134,11 +177,10 @@ class TransactionJournal:
         raw_transactions: list[ScheduledTransaction] = self.book.query(
             ScheduledTransaction
         ).filter(
-            ScheduledTransaction.start_date >= start_date,
-            ScheduledTransaction.start_date <= end_date,
-            or_(ScheduledTransaction.end_date >= end_date,
-                ScheduledTransaction.end_date is None),
-            ScheduledTransaction.enabled is True
+            ScheduledTransaction.start_date <= start_date,
+            or_(ScheduledTransaction.end_date >= start_date,
+                ScheduledTransaction.end_date == None),  # noqa: E711
+            ScheduledTransaction.enabled == True  # noqa: E712
         ).all()
 
         transactions: list[ScheduledTransactionOccurences] = []

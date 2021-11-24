@@ -91,13 +91,22 @@ class SimpleTransaction:
         from_account: Account
         to_account: Account
         split: Split
-        for split in tr.template_account.splits:
-            slots = split["sched-xaction"]
-            if slots["debit-formula"].value != "":
-                to_account = slots["account"].value
-                value = slots["debit-numeric"].value
-            elif slots["credit-formula"].value != "":
-                from_account = slots["account"].value
+
+        if tr.guid == "05a8aacc72a447e4b385a52972ccce25":
+            # TODO: Better handle this one (with debit formula and multiple splits)
+            splitFromAccount = tr.template_account.splits[0]
+            splitToAccount = tr.template_account.splits[2]
+            from_account = splitFromAccount["sched-xaction"]["account"].value
+            to_account = splitToAccount["sched-xaction"]["account"].value
+            value = Decimal(830.04)
+        else:
+            for split in tr.template_account.splits:
+                slots = split["sched-xaction"]
+                if slots["debit-numeric"].value > 0:
+                    to_account = slots["account"].value
+                    value = slots["debit-numeric"].value
+                elif slots["credit-numeric"].value > 0:
+                    from_account = slots["account"].value
 
         transaction_type: TransactionType
         if to_account.type == "LIABILITY" or to_account.type == "EXPENSE":

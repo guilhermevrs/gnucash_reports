@@ -32,11 +32,14 @@ class TransactionData:
             config: TransactionDataConfig = None) -> None:
         self.config = config
         self.items = []
-        for item in data.items():
+
+        sorted_keys = sorted(data)
+        for key in sorted_keys:
+            item = data[key]
             self.items.append(TransactionDataItem(
-                date=item[0],
-                recorded=item[1][0],
-                scheduled=item[1][1]
+                date=key,
+                recorded=item[0],
+                scheduled=item[1]
             ))
 
     def get_dataframe(self) -> pd.DataFrame:

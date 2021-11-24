@@ -47,11 +47,10 @@ class TestTransactionJournal:
         self.testClass._get_scheduled_transactions(start_date, end_date)
 
         self.mockBook.session.query.return_value.filter.assert_called_once_with(
-            ScheduledTransaction.start_date >= start_date,
-            ScheduledTransaction.start_date <= end_date,
-            or_(ScheduledTransaction.end_date >= end_date,
-                ScheduledTransaction.end_date is None),
-            ScheduledTransaction.enabled is True
+            ScheduledTransaction.start_date <= start_date,
+            or_(ScheduledTransaction.end_date >= start_date,
+                ScheduledTransaction.end_date == None),  # noqa: E711
+            ScheduledTransaction.enabled == True  # noqa: E712
         )
 
     def test__get_recursive_occurences_monthly_in(self):
@@ -70,10 +69,40 @@ class TestTransactionJournal:
         assert self.testClass._get_recursive_occurences(recurrence, date(
             2021, 9, 12), date(2021, 10, 11)) == [date(2021, 9, 15)]
         assert self.testClass._get_recursive_occurences(recurrence, date(
-            2020, 9, 12), date(2021, 10, 11)) == [date(2020, 9, 15), date(2021, 9, 15)]
+            2020, 9, 12), date(2020, 10, 11)) == [date(2020, 9, 15)]
+
         recurrence.recurrence_mult = 2
         assert self.testClass._get_recursive_occurences(recurrence, date(
             2023, 8, 12), date(2023, 9, 22)) == [date(2023, 8, 15)]
+
+    def test__get_recursive_occurences_monthly_in_other_cases(self):
+        """should return the number of occurences exists, given the recurence"""
+        recurrence = MockRecurrence()
+        recurrence.recurrence_mult = 1
+        recurrence.recurrence_period_type = "month"
+        recurrence.recurrence_period_start = date(2021, 9, 7)
+
+        assert self.testClass._get_recursive_occurences(recurrence, date(
+            2021, 11, 20), date(2022, 3, 26)) == [
+                date(2021, 12, 7),
+                date(2022, 1, 7),
+                date(2022, 2, 7),
+                date(2022, 3, 7)
+            ]
+
+    def test__get_recursive_occurences_end_of_month(self):
+        recurrence = MockRecurrence()
+        recurrence.recurrence_mult = 1
+        recurrence.recurrence_period_type = "end_of_month"
+        recurrence.recurrence_period_start = date(2021, 9, 30)
+
+        assert self.testClass._get_recursive_occurences(recurrence, date(
+            2021, 11, 20), date(2022, 3, 26)) == [
+                date(2021, 11, 30),
+                date(2021, 12, 31),
+                date(2022, 1, 31),
+                date(2022, 2, 28)
+            ]
 
     def test__get_recursive_occurences_monthly_out(self):
         """should return the number of occurences exists, given the recurence"""

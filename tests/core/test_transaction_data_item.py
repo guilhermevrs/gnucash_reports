@@ -50,8 +50,7 @@ class TestTransactionDataItem:
         # Test if the balance is zero
         data_item = TransactionDataItem(date(2000, 10, 10), [], [])
         balance = data_item.get_balance()
-        assert balance.checkings.recorded == Decimal('0')
-        assert balance.checkings.scheduled == Decimal(0)
+        assert balance.checkings is None
         # Test two recorded
         scheduled = []
         recorded = [
@@ -135,8 +134,7 @@ class TestTransactionDataItem:
         data_item = TransactionDataItem(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance()
-        assert balance.checkings.recorded == Decimal('0')
-        assert balance.checkings.scheduled == Decimal('0')
+        assert balance.checkings is None
 
     def test_get_balance_with_transfer_with_account(self, piecash_helper):
         """should handle the transfers when we have a checkings account"""
@@ -156,8 +154,7 @@ class TestTransactionDataItem:
         assert balance.checkings.scheduled == Decimal('666')
 
         balance = data_item.get_balance(checkings_parent="Assets")
-        assert balance.checkings.recorded == Decimal('0')
-        assert balance.checkings.scheduled == Decimal('0')
+        assert balance.checkings is None
 
     def test_get_balance_with_recorded_liabilities(self, piecash_helper: TestPiecashHelper):
         """should consider consider a balance for liability, with positive balance"""

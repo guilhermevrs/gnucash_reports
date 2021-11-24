@@ -17,28 +17,23 @@ def dash_test():
 
     book = piecash.open_book(
         "/mnt/c/Users/guilh/Documents/Gnucash/test_sqllite/test_sqllite.gnucash", open_if_lock=True)
-    config = TransactionJournalConfig(checkings_parent_guid="3838edd7804247868ebed2d2404d4c26")
+    config = TransactionJournalConfig(
+        checkings_parent_guid="3838edd7804247868ebed2d2404d4c26",
+        liabilities_parent_guid="44a238b52fdd44c6bad26b9eb5efc219"
+    )
     journal = TransactionJournal(book=book, config=config)
 
-    transaction_data = journal.get_transaction_data(date(2021, 10, 1), date(2021, 10, 30))
-    df = transaction_data.get_balance_data().sort_values(by="date")
+    transaction_data = journal.get_transaction_data(date(2021, 11, 20), date(2022, 5, 26))
+    df = transaction_data.get_balance_data()
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df["date"], y=df["balance"], name="Balance",
-                             line_shape='hv'))
+    c = ForecastComponent(app=app, input=ForecastComponentInput(data=df))
+    app.layout = html.Div([
+            html.Div(id="graph-container")
+        ]
+    )
 
-    app.layout = html.Div(children=[
-        html.H1(children='Test'),
+    app.layout["graph-container"] = c.layout
 
-        html.Div(children='''
-            Dash: A web application framework for your data.
-        '''),
-
-        dcc.Graph(
-            id='example-graph',
-            figure=fig
-        )
-    ])
     app.run_server(debug=True)
 
 
@@ -70,6 +65,6 @@ def component_test():
 
 if __name__ == "__main__":
     # execute only if run as a script
-    # dash_test()
+    dash_test()
     # piecash_test()
-    component_test()
+    # component_test()

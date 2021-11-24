@@ -39,15 +39,23 @@ class TransactionDataItem:
         """
         Returns the balance information for the date
         """
-        checkings_balance = Balance(Decimal(0), Decimal(0))
-        liability_balance = Balance(Decimal(0), Decimal(0))
+        checkings_balance = None
+        liability_balance = None
 
         def add_checkings(val: Decimal, scheduled: bool):
+            nonlocal checkings_balance
+
+            if checkings_balance is None:
+                checkings_balance = Balance(Decimal(0), Decimal(0))
             checkings_balance.scheduled = checkings_balance.scheduled + val
             if not scheduled:
                 checkings_balance.recorded = checkings_balance.recorded + val
 
         def add_liability(val: Decimal, scheduled: bool):
+            nonlocal liability_balance
+            
+            if liability_balance is None:
+                liability_balance = Balance(Decimal(0), Decimal(0))
             liability_balance.scheduled = liability_balance.scheduled + val
             if not scheduled:
                 liability_balance.recorded = liability_balance.recorded + val
