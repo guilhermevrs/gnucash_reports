@@ -1,6 +1,7 @@
 import dataclasses
 from datetime import datetime
 from decimal import Decimal
+import json
 
 import pandas as pd
 from core.transaction_data_item import TransactionDataItem
@@ -18,9 +19,26 @@ class TransactionDataConfig:
     checkings_parent: str = None
     opening_liability: Decimal = None
 
+    def to_json(self):
+        return {
+            "opening_balance": float(self.opening_balance),
+            "opening_date": self.opening_date.__str__(),
+            "checkings_parent": self.checkings_parent,
+            "opening_liability": float(self.opening_liability)
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(
+            opening_balance=Decimal(data["opening_balance"]),
+            opening_liability=Decimal(data["opening_liability"]),
+            checkings_parent=data["checkings_parent"],
+            opening_date=datetime.fromisoformat(data["opening_date"])
+        )
+
 
 @dataclass
-class TransactionData:
+class TransactionData(json.JSONEncoder):
     """
     Data related to the transaction itself
     """
@@ -153,8 +171,11 @@ class TransactionData:
     def from_dataframe(cls, df: pd.DataFrame, config: TransactionDataConfig = None):
         items = []
 
-        for date in df["date"].unique():
-            items.append(TransactionDataItem.from_dataframe(date=date, df=df[df["date"] == date]))
+        unique_dates = df["date"].unique()
+        if unique_dates is not None and len(unique_dates) > 0:
+            unique_dates.sort()
+            for date in unique_dates:
+                items.append(TransactionDataItem.from_dataframe(date=date, df=df[df["date"] == date]))
 
         return cls(
             items=items,

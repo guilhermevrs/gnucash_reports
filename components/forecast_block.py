@@ -4,6 +4,7 @@ from dash.dependencies import Input, Output
 from dash.development.base_component import Component
 from plotly.missing_ipywidgets import FigureWidget
 from dash.exceptions import PreventUpdate
+from components.transaction_store_block import TransactionStore
 
 from core.typings import BalanceType
 from core import TransactionData
@@ -43,8 +44,8 @@ class ForecastComponent(BaseComponent):
             if data is None:
                 raise PreventUpdate
 
-            df = pd.read_json(data, orient='split')
-            data = TransactionData.from_dataframe(df=df).get_balance_data()
+            trx_data = TransactionStore.load_data(data)
+            balance_data = trx_data.get_balance_data()
 
             fig = go.Figure()
 
@@ -58,10 +59,10 @@ class ForecastComponent(BaseComponent):
                         dash="dash" if scheduled is True else "solid"
                     )))
 
-            add_trace(self.get_recorded_checkings(data), "Checkings")
-            add_trace(self.get_scheduled_checkings(data), "Checkings (scheduled)", True)
-            add_trace(self.get_recorded_liabilities(data), "Liabilities")
-            add_trace(self.get_scheduled_liabilities(data), "Liabilities (scheduled)", True)
+            add_trace(self.get_recorded_checkings(balance_data), "Checkings")
+            add_trace(self.get_scheduled_checkings(balance_data), "Checkings (scheduled)", True)
+            add_trace(self.get_recorded_liabilities(balance_data), "Liabilities")
+            add_trace(self.get_scheduled_liabilities(balance_data), "Liabilities (scheduled)", True)
 
             return fig
 
