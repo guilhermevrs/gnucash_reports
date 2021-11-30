@@ -1,3 +1,4 @@
+import dataclasses
 import pandas as pd
 from core.simple_transaction import SimpleTransaction
 from core.typings import TransactionType, Balance, BalanceData
@@ -13,27 +14,7 @@ class TransactionDataItem:
     Contains all the transactions (recorded or scheduled) for a given date
     """
     date: datetime
-    transactions: list[SimpleTransaction]
-
-    def __init__(
-            self, date: datetime,
-            recorded: list[Transaction] = [],
-            scheduled: list[ScheduledTransaction] = []) -> None:
-        self.date = date
-        self.transactions = []
-        # Get all the guids from scheduled recorded
-        sch_guids = []
-        for rec in recorded:
-            if rec.scheduled_transaction is not None:
-                sch_guids.append(rec.scheduled_transaction.guid)
-            self.transactions.append(SimpleTransaction.simplify_record(rec))
-
-        for sch in scheduled:
-            if sch.guid in sch_guids:
-                sch_guids.remove(sch.guid)
-            else:
-                self.transactions.append(
-                    SimpleTransaction.simplify_scheduled_record(sch))
+    transactions: list[SimpleTransaction] = dataclasses.field(default_factory=list)
 
     def get_balance(self, checkings_parent: str = None) -> BalanceData:
         """
@@ -53,7 +34,7 @@ class TransactionDataItem:
 
         def add_liability(val: Decimal, scheduled: bool):
             nonlocal liability_balance
-            
+
             if liability_balance is None:
                 liability_balance = Balance(Decimal(0), Decimal(0))
             liability_balance.scheduled = liability_balance.scheduled + val
@@ -94,3 +75,39 @@ class TransactionDataItem:
             df = pd.concat(temp_dfs, ignore_index=True).assign(
                 date=lambda _: self.date)
             return df
+
+    @classmethod
+    def from_dataframe(cls, date: datetime, df: pd.DataFrame) -> None:
+        """
+        Loads a TransactionDataItem using a dataframe
+        """
+        transactions = []
+        for index, row in df.iterrows():
+            transactions.append(SimpleTransaction.from_series(row))
+
+        return cls(date=date, transactions=transactions)
+
+    @classmethod
+    def from_transactions(cls,
+                          date: datetime,
+                          recorded: list[Transaction] = [],
+                          scheduled: list[ScheduledTransaction] = []):
+        """
+        Loads a TransactionDataItem using a GnuCash transaction objects
+        """
+        transactions = []
+        # Get all the guids from scheduled recorded
+        sch_guids = []
+        for rec in recorded:
+            if rec.scheduled_transaction is not None:
+                sch_guids.append(rec.scheduled_transaction.guid)
+            transactions.append(SimpleTransaction.simplify_record(rec))
+
+        for sch in scheduled:
+            if sch.guid in sch_guids:
+                sch_guids.remove(sch.guid)
+            else:
+                transactions.append(
+                    SimpleTransaction.simplify_scheduled_record(sch))
+
+        return cls(date=date, transactions=transactions)

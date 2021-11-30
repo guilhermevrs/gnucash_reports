@@ -222,4 +222,4 @@ class TransactionJournal:
                 checkings_parent=checkings_account.fullname,
                 opening_liability=opening_liability)
 
-        return TransactionData(data=raw_data, config=config)
+        return TransactionData.from_rawdata(data=raw_data, config=config)

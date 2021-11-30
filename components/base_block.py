@@ -20,13 +20,12 @@ class BaseComponent:
     layout: Component
 
     def __init__(self, app: Dash = None, config: BaseComponentConfig = None) -> None:
-        self.app = app
         self.config = config
 
         self.layout = self.render()
 
-        if self.app is not None and hasattr(self, "callbacks"):
-            self.callbacks()
+        if app is not None and hasattr(self, "callbacks"):
+            self.callbacks(app=app)
 
     def prefix(self, name: str) -> str:
         """returns a prefixed string based on config"""

@@ -1,13 +1,13 @@
 from datetime import date
+from components.transaction_store_block import TransactionStoreInput
 from core.transaction_journal import TransactionJournal, TransactionJournalConfig
 import piecash
 
 import dash
-from dash import html, dcc, dash_table as dt
-import plotly.graph_objects as go
+from dash import html, dash_table as dt
 import pandas as pd
 
-from components import ForecastComponent, ForecastComponentInput
+from components import ForecastComponent, ForecastComponentInput, TransactionStore
 from core.typings import BalanceType
 
 
@@ -24,15 +24,17 @@ def dash_test():
     journal = TransactionJournal(book=book, config=config)
 
     transaction_data = journal.get_transaction_data(date(2021, 11, 20), date(2022, 5, 26))
-    df = transaction_data.get_balance_data()
 
-    c = ForecastComponent(app=app, input=ForecastComponentInput(data=df))
+    transaction_store = TransactionStore(input=TransactionStoreInput(data=transaction_data))
+    forecast = ForecastComponent(app=app, input=ForecastComponentInput(store_name=transaction_store.get_name()))
+
     app.layout = html.Div([
-            html.Div(id="graph-container")
-        ]
-    )
+        html.Div(id="store-container"),
+        html.Div(id="graph-container")
+    ])
 
-    app.layout["graph-container"] = c.layout
+    app.layout["graph-container"] = forecast.layout
+    app.layout["store-container"] = transaction_store.layout
 
     app.run_server(debug=True)
 
@@ -41,21 +43,27 @@ def component_test():
     app = dash.Dash(__name__)
 
     d = {
-        'date': [1, 2, 3, 4, 5, 6, 7],
-        'balance': [100, 120, 130, 150, 175, 183, 196],
-        'scheduled': [False, False, True, False, True, True, True]
+        'date': [1, 2],
+        'balance': [100, 111],
+        'scheduled': [False, True],
+        'type': [BalanceType.CHECKINGS, BalanceType.LIABILITIES]
     }
     data = pd.DataFrame(data=d)
 
+    data['type'] = data['type'].map({
+        BalanceType.CHECKINGS: 'Checkings',
+        BalanceType.LIABILITIES: 'Liabilities'
+    })
+
     # c = ForecastComponent(app=app, input=ForecastComponentInput(data=data))
     app.layout = html.Div([
-            html.Div(id="graph-container"),
-            dt.DataTable(
-                id='table',
-                columns=[{"name": i, "id": i} for i in data.columns],
-                data=data.to_dict(orient='records'),
-            )
-        ]
+        html.Div(id="graph-container"),
+        dt.DataTable(
+            id='table',
+            columns=[{"name": i, "id": i} for i in data.columns],
+            data=data.to_dict(orient='records'),
+        )
+    ]
     )
 
     # app.layout["graph-container"] = c.layout

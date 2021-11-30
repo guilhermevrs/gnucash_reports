@@ -30,7 +30,7 @@ class TestForecastComponent:
     def test_get_recorded_checkings(self):
         """Should return only the recorded tx for checkings"""
 
-        c = ForecastComponent(input=ForecastComponentInput(data=self.data))
+        c = ForecastComponent(input=ForecastComponentInput(store_name="dummy"))
 
         result = c.get_recorded_checkings(self.data)
 
@@ -40,7 +40,7 @@ class TestForecastComponent:
     def test_get_scheduled_checkings(self):
         """Should return only the scheduled tx for checkings"""
 
-        c = ForecastComponent(input=ForecastComponentInput(data=self.data))
+        c = ForecastComponent(input=ForecastComponentInput(store_name="dummy"))
 
         result = c.get_scheduled_checkings(self.data)
 
@@ -50,7 +50,7 @@ class TestForecastComponent:
     def test_get_recorded_liabilities(self):
         """Should return only the recorded tx for liabilities"""
 
-        c = ForecastComponent(input=ForecastComponentInput(data=self.data))
+        c = ForecastComponent(input=ForecastComponentInput(store_name="dummy"))
 
         result = c.get_recorded_liabilities(self.data)
 
@@ -60,7 +60,7 @@ class TestForecastComponent:
     def test_get_scheduled_liabilities(self):
         """Should return only the scheduled tx for liabilities"""
 
-        c = ForecastComponent(input=ForecastComponentInput(data=self.data))
+        c = ForecastComponent(input=ForecastComponentInput(store_name="dummy"))
 
         result = c.get_scheduled_liabilities(self.data)
 

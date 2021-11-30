@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 from dash.dash import Dash
+from dash.dependencies import Input, Output
 from dash.development.base_component import Component
+from plotly.missing_ipywidgets import FigureWidget
+from dash.exceptions import PreventUpdate
 
 from core.typings import BalanceType
+from core import TransactionData
 from .base_block import BaseComponent, BaseComponentConfig
 from dash import html, dcc
 import plotly.graph_objects as go
@@ -11,7 +15,7 @@ import pandas as pd
 
 @dataclass
 class ForecastComponentInput():
-    data: pd.DataFrame
+    store_name: str
 
 
 class ForecastComponent(BaseComponent):
@@ -24,28 +28,42 @@ class ForecastComponent(BaseComponent):
 
     def render(self):
         """Initializes the component layout"""
-        fig = go.Figure()
-
-        def add_trace(data: pd.DataFrame, name: str, scheduled: bool = False):
-            fig.add_trace(
-                go.Scatter(x=data["date"],
-                           y=data["balance"],
-                           name=name,
-                           line=go.scatter.Line(
-                    dash="dash" if scheduled is True else "solid"
-                )))
-
-        add_trace(self.get_recorded_checkings(self.input.data), "Checkings")
-        add_trace(self.get_scheduled_checkings(self.input.data), "Checkings (scheduled)", True)
-        add_trace(self.get_recorded_liabilities(self.input.data), "Liabilities")
-        add_trace(self.get_scheduled_liabilities(self.input.data), "Liabilities (scheduled)", True)
-
         return html.Div(children=[
             dcc.Graph(
-                id=self.prefix('graph'),
-                figure=fig
+                id=self.prefix('graph')
             )
         ])
+
+    def callbacks(self, app: Dash) -> None:
+        @app.callback(
+            Output(self.prefix('graph'), 'figure'),
+            Input(self.input.store_name, "data")
+        )
+        def load_data(data) -> FigureWidget:
+            if data is None:
+                raise PreventUpdate
+
+            df = pd.read_json(data, orient='split')
+            data = TransactionData.from_dataframe(df=df).get_balance_data()
+
+            fig = go.Figure()
+
+            def add_trace(data: pd.DataFrame, name: str, scheduled: bool = False):
+                nonlocal fig
+                fig.add_trace(
+                    go.Scatter(x=data["date"],
+                               y=data["balance"],
+                               name=name,
+                               line=go.scatter.Line(
+                        dash="dash" if scheduled is True else "solid"
+                    )))
+
+            add_trace(self.get_recorded_checkings(data), "Checkings")
+            add_trace(self.get_scheduled_checkings(data), "Checkings (scheduled)", True)
+            add_trace(self.get_recorded_liabilities(data), "Liabilities")
+            add_trace(self.get_scheduled_liabilities(data), "Liabilities (scheduled)", True)
+
+            return fig
 
     def _get_scheduled(self, data: pd.DataFrame, scheduled_value: bool):
         """Filter data based on the scheduled value"""

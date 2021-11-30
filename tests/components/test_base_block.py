@@ -1,3 +1,4 @@
+from dash.dash import Dash
 import pytest
 from components.base_block import BaseComponent, BaseComponentConfig
 from unittest.mock import patch, MagicMock
@@ -5,7 +6,7 @@ from dash import html
 
 
 class ChildClass(BaseComponent):
-    def callbacks():
+    def callbacks(self, app: Dash):
         pass
 
 
@@ -23,20 +24,13 @@ class TestBaseComponent:
         baseBlock = BaseComponent()
         assert baseBlock is not None
 
-    @patch('dash.Dash')
-    def test_pass_app_to_constructor(self, MockDash: MagicMock):
-        """should correctly assign the app if passed to constructor"""
-        mockApp = MockDash()
-        baseBlock = BaseComponent(app=mockApp)
-        assert baseBlock.app == mockApp
-
     @patch.object(ChildClass, "callbacks")
     @patch("dash.Dash")
     def test_call_callbacks_when_needed(self, MockDash: MagicMock, mock_callback: MagicMock):
         """should call the callbacks method when exists and app is defined"""
         mockApp = MockDash()
         ChildClass(app=mockApp)
-        mock_callback.assert_called_once()
+        mock_callback.assert_called_with(app=mockApp)
 
     @patch.object(ChildClass, "callbacks")
     def test_no_call_callbacks_when_no_app(self, mock_callback: MagicMock):

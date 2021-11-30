@@ -27,7 +27,7 @@ class TestTransactionData:
     def test_load_from_empty_dic(self):
         """should load an object from empty dictionary"""
         dic: RawTransactionData = dict([])
-        result = TransactionData(data=dic)
+        result = TransactionData.from_rawdata(data=dic)
         assert len(result.items) == 0
 
     def test_load_from_simple_dic(self, piecash_helper: TestPiecashHelper):
@@ -41,14 +41,14 @@ class TestTransactionData:
                 scheduled_transfer
             ]))
         ])
-        result = TransactionData(data=dic)
+        result = TransactionData.from_rawdata(data=dic)
         assert len(result.items) == 1
         assert len(result.items[0].transactions) == 2
 
     def test_get_dataframe(self):
         """should return an empty dataframe from an empty object"""
         dic: RawTransactionData = dict([])
-        result = TransactionData(data=dic)
+        result = TransactionData.from_rawdata(data=dic)
 
         assert len(result.get_dataframe()) == 0
 
@@ -57,7 +57,7 @@ class TestTransactionData:
         dic: RawTransactionData = dict([])
         config = TransactionDataConfig(opening_balance=Decimal(
             400), opening_date=date(2000, 11, 10))
-        result = TransactionData(data=dic, config=config)
+        result = TransactionData.from_rawdata(data=dic, config=config)
 
         df = result.get_balance_data()
         assert len(df) == 1
@@ -74,10 +74,10 @@ class TestTransactionData:
         mock_get_balance.return_value = BalanceData(checkings=checkings)
 
         dic: RawTransactionData = dict([])
-        result = TransactionData(data=dic)
+        result = TransactionData.from_rawdata(data=dic)
 
         result.items = [
-            TransactionDataItem(date(2000, 10, 10), [], [])
+            TransactionDataItem.from_transactions(date(2000, 10, 10), [], [])
         ]
 
         df = result.get_balance_data()
@@ -100,10 +100,10 @@ class TestTransactionData:
         dic: RawTransactionData = dict([])
         config = TransactionDataConfig(opening_balance=Decimal(
             2300), opening_date=date(2000, 11, 10))
-        result = TransactionData(data=dic, config=config)
+        result = TransactionData.from_rawdata(data=dic, config=config)
 
         result.items = [
-            TransactionDataItem(date(2000, 10, 10), [], [])
+            TransactionDataItem.from_transactions(date(2000, 10, 10), [], [])
         ]
 
         df = result.get_balance_data()
@@ -126,10 +126,10 @@ class TestTransactionData:
         dic: RawTransactionData = dict([])
         config = TransactionDataConfig(opening_balance=Decimal(
             2300), opening_date=date(2000, 11, 10), checkings_parent="MY_CHECKINGS")
-        result = TransactionData(data=dic, config=config)
+        result = TransactionData.from_rawdata(data=dic, config=config)
 
         result.items = [
-            TransactionDataItem(date(2000, 10, 10), [], [])
+            TransactionDataItem.from_transactions(date(2000, 10, 10), [], [])
         ]
 
         result.get_balance_data()
@@ -143,10 +143,10 @@ class TestTransactionData:
         mock_get_balance.return_value = BalanceData(checkings=checkings)
 
         dic: RawTransactionData = dict([])
-        result = TransactionData(data=dic)
+        result = TransactionData.from_rawdata(data=dic)
 
         result.items = [
-            TransactionDataItem(date(2000, 10, 10), [], [])
+            TransactionDataItem.from_transactions(date(2000, 10, 10), [], [])
         ]
 
         df = result.get_balance_data()
@@ -170,10 +170,10 @@ class TestTransactionData:
         mock_get_balance.return_value = BalanceData(liability=liability)
 
         dic: RawTransactionData = dict([])
-        result = TransactionData(data=dic)
+        result = TransactionData.from_rawdata(data=dic)
 
         result.items = [
-            TransactionDataItem(date(2000, 10, 10), [], [])
+            TransactionDataItem.from_transactions(date(2000, 10, 10), [], [])
         ]
 
         df = result.get_balance_data()
@@ -197,7 +197,7 @@ class TestTransactionData:
         dic: RawTransactionData = dict([])
         config = TransactionDataConfig(opening_balance=Decimal(
             2300), opening_date=date(2000, 11, 10), opening_liability=Decimal(5000))
-        result = TransactionData(data=dic, config=config)
+        result = TransactionData.from_rawdata(data=dic, config=config)
 
         df = result.get_balance_data()
         assert len(df) == 2

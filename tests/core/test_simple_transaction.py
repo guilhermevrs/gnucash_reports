@@ -1,4 +1,6 @@
 from decimal import Decimal
+
+import pandas as pd
 from core.simple_transaction import SimpleTransaction
 from core.typings import TransactionType
 from tests.test_piecash_helper import TestPiecashHelper
@@ -160,3 +162,28 @@ class TestSimpleTransaction:
         assert len(df.columns) == 2
         assert df["value"][0] == 12
         assert not df["is_scheduled"][0]
+
+    def test_from_series(self):
+        """
+        should load a SimpleTransaction from a Series
+        """
+        series = pd.Series(data={
+            "description": "My trx description",
+            "value": Decimal(432),
+            "is_scheduled": True,
+            "from_account": "Payment account",
+            "from_account_guid": "123456",
+            "to_account": "Expense account",
+            "to_account_guid": "654321",
+            "transaction_type": TransactionType.EXPENSE
+        })
+        transaction = SimpleTransaction.from_series(series)
+
+        assert transaction.description == "My trx description"
+        assert transaction.from_account == "Payment account"
+        assert transaction.from_account_guid == "123456"
+        assert transaction.to_account == "Expense account"
+        assert transaction.to_account_guid == "654321"
+        assert transaction.transaction_type == TransactionType.EXPENSE
+        assert transaction.value == Decimal(432)
+        assert transaction.is_scheduled == True  # noqa E712

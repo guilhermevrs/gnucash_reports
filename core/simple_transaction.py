@@ -1,5 +1,6 @@
 from decimal import Decimal
 from dataclasses import dataclass
+from typing import Dict
 import pandas as pd
 from piecash.core.account import Account
 
@@ -129,4 +130,22 @@ class SimpleTransaction:
             to_account_guid=to_account.guid,
             transaction_type=transaction_type,
             is_scheduled=True
+        )
+
+    @classmethod
+    def from_series(cls, series: pd.Series):
+
+        raw_type = series["transaction_type"]
+        if isinstance(raw_type, Dict):
+            raw_type = TransactionType[raw_type["name"]]
+
+        return cls(
+            value=Decimal(series["value"]),
+            description=series["description"],
+            from_account=series["from_account"],
+            from_account_guid=series["from_account_guid"],
+            to_account=series["to_account"],
+            to_account_guid=series["to_account_guid"],
+            transaction_type=raw_type,
+            is_scheduled=series["is_scheduled"]
         )

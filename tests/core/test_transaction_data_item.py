@@ -29,7 +29,7 @@ class TestTransactionDataItem:
             piecash_helper.get_record_previously_scheduled()
         ]
 
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
 
         assert len(data_item.transactions) == 5
@@ -42,13 +42,13 @@ class TestTransactionDataItem:
         ]
 
         # Test a simple record item
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance()
         assert balance.checkings.recorded == Decimal('-50')
         assert balance.checkings.scheduled == Decimal(-50)
         # Test if the balance is zero
-        data_item = TransactionDataItem(date(2000, 10, 10), [], [])
+        data_item = TransactionDataItem.from_transactions(date(2000, 10, 10), [], [])
         balance = data_item.get_balance()
         assert balance.checkings is None
         # Test two recorded
@@ -57,7 +57,7 @@ class TestTransactionDataItem:
             piecash_helper.get_expense_record(),
             piecash_helper.get_expense_record()
         ]
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance()
         assert balance.checkings.recorded == Decimal('-100')
@@ -68,7 +68,7 @@ class TestTransactionDataItem:
             piecash_helper.get_scheduled_only()
         ]
         recorded = []
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance()
         assert balance.checkings.scheduled == Decimal('-200')
@@ -81,7 +81,7 @@ class TestTransactionDataItem:
         recorded = [
             piecash_helper.get_expense_record()
         ]
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance()
         assert balance.checkings.recorded == Decimal(-50)
@@ -96,7 +96,7 @@ class TestTransactionDataItem:
         recorded = [
             piecash_helper.get_income_record()
         ]
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance()
         assert balance.checkings.recorded == Decimal('400')
@@ -108,7 +108,7 @@ class TestTransactionDataItem:
             piecash_helper.get_income_record(),
             piecash_helper.get_income_record()
         ]
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance()
         assert balance.checkings.recorded == Decimal('800')
@@ -118,7 +118,7 @@ class TestTransactionDataItem:
             piecash_helper.get_scheduled_income()
         ]
         recorded = []
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance()
         assert balance.checkings.scheduled == Decimal('123')
@@ -131,7 +131,7 @@ class TestTransactionDataItem:
         recorded = [
             piecash_helper.get_recorded_transfer()
         ]
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance()
         assert balance.checkings is None
@@ -143,7 +143,7 @@ class TestTransactionDataItem:
         recorded = [
             piecash_helper.get_recorded_transfer()
         ]
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
         balance = data_item.get_balance(checkings_parent="Assets:Checkings")
         assert balance.checkings.recorded == Decimal('-666')
@@ -162,7 +162,7 @@ class TestTransactionDataItem:
         recorded = [
             piecash_helper.get_recorded_liability()
         ]
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
 
         balance = data_item.get_balance()
@@ -174,7 +174,7 @@ class TestTransactionDataItem:
         recorded = [
             piecash_helper.get_credit_card_record()
         ]
-        data_item = TransactionDataItem(
+        data_item = TransactionDataItem.from_transactions(
             date(2000, 10, 10), recorded, scheduled)
 
         balance = data_item.get_balance()
@@ -183,11 +183,11 @@ class TestTransactionDataItem:
 
     def test_get_dataframe(self, piecash_helper: TestPiecashHelper):
         """should return the correct dataframe"""
-        data_item = TransactionDataItem(date(2000, 10, 10), [], [])
+        data_item = TransactionDataItem.from_transactions(date(2000, 10, 10), [], [])
 
         assert len(data_item.get_dataframe()) == 0
 
-        data_item = TransactionDataItem(date(2000, 10, 10), [
+        data_item = TransactionDataItem.from_transactions(date(2000, 10, 10), [
             piecash_helper.get_recorded_transfer(),
             piecash_helper.get_income_record()
         ], [])

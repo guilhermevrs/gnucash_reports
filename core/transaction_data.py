@@ -1,3 +1,4 @@
+import dataclasses
 from datetime import datetime
 from decimal import Decimal
 
@@ -23,24 +24,8 @@ class TransactionData:
     """
     Data related to the transaction itself
     """
-    items: list[TransactionDataItem]
-    config: TransactionDataConfig
-
-    def __init__(
-            self,
-            data: RawTransactionData,
-            config: TransactionDataConfig = None) -> None:
-        self.config = config
-        self.items = []
-
-        sorted_keys = sorted(data)
-        for key in sorted_keys:
-            item = data[key]
-            self.items.append(TransactionDataItem(
-                date=key,
-                recorded=item[0],
-                scheduled=item[1]
-            ))
+    items: list[TransactionDataItem] = dataclasses.field(default_factory=list)
+    config: TransactionDataConfig = None
 
     def get_dataframe(self) -> pd.DataFrame:
         """
@@ -50,7 +35,7 @@ class TransactionData:
             return pd.DataFrame()
         else:
             return pd.concat(
-                [tr.get_dataframe for tr in self.items],
+                [tr.get_dataframe() for tr in self.items],
                 ignore_index=True)
 
     def get_balance_data(self) -> pd.DataFrame:
@@ -146,3 +131,32 @@ class TransactionData:
                     ))
 
         return pd.DataFrame(checkings_list + liabilities_list)
+
+    @classmethod
+    def from_rawdata(cls, data: RawTransactionData, config: TransactionDataConfig = None):
+        sorted_keys = sorted(data)
+        items = []
+        for key in sorted_keys:
+            item = data[key]
+            items.append(TransactionDataItem.from_transactions(
+                date=key,
+                recorded=item[0],
+                scheduled=item[1]
+            ))
+
+        return cls(
+            items=items,
+            config=config
+        )
+
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame, config: TransactionDataConfig = None):
+        items = []
+
+        for date in df["date"].unique():
+            items.append(TransactionDataItem.from_dataframe(date=date, df=df[df["date"] == date]))
+
+        return cls(
+            items=items,
+            config=config
+        )
