@@ -7,7 +7,6 @@ from dash.exceptions import PreventUpdate
 from components.transaction_store_block import TransactionStore
 
 from core.typings import BalanceType
-from core import TransactionData
 from .base_block import BaseComponent, BaseComponentConfig
 from dash import html, dcc
 import plotly.graph_objects as go

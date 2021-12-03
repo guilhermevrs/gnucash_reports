@@ -1,5 +1,6 @@
 from datetime import date
 from components.transaction_store_block import TransactionStoreInput
+from components.transactions_table_block import TransactionTableComponent, TransactionTableInput
 from core.transaction_journal import TransactionJournal, TransactionJournalConfig
 import piecash
 
@@ -27,13 +28,16 @@ def dash_test():
 
     transaction_store = TransactionStore(input=TransactionStoreInput(data=transaction_data))
     forecast = ForecastComponent(app=app, input=ForecastComponentInput(store_name=transaction_store.get_name()))
+    table = TransactionTableComponent(app=app, input=TransactionTableInput(store_name=transaction_store.get_name()))
 
     app.layout = html.Div([
         html.Div(id="store-container"),
-        html.Div(id="graph-container")
+        html.Div(id="graph-container"),
+        html.Div(id="table-container")
     ])
 
     app.layout["graph-container"] = forecast.layout
+    app.layout["table-container"] = table.layout
     app.layout["store-container"] = transaction_store.layout
 
     app.run_server(debug=True)

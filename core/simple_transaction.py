@@ -36,8 +36,8 @@ class SimpleTransaction:
                 'description': self.description,
                 'from_account': self.from_account,
                 'from_account_guid': self.from_account_guid,
-                'to_account': self.from_account,
-                'to_account_guid': self.from_account_guid,
+                'to_account': self.to_account,
+                'to_account_guid': self.to_account_guid,
                 'transaction_type': self.transaction_type
             })
         return pd.DataFrame([df_dict])
