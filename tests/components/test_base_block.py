@@ -72,5 +72,3 @@ class TestBaseComponent:
         mock_callback.assert_called_once()
 
         assert c.layout == expected
-
-

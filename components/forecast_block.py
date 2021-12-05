@@ -36,7 +36,7 @@ class ForecastComponent(BaseComponent):
 
     def callbacks(self, app: Dash) -> None:
         @app.callback(
-            Output(self.prefix('graph'), 'figure'),
+            Output(self.get_name(), 'figure'),
             Input(self.input.store_name, "data")
         )
         def load_data(data) -> FigureWidget:
@@ -92,3 +92,6 @@ class ForecastComponent(BaseComponent):
         """Filter data for only scheduled liabilities"""
         all_scheduled = self._get_scheduled(data, True)
         return self._get_type(all_scheduled, BalanceType.LIABILITIES)
+
+    def get_name(self):
+        return self.prefix('graph')

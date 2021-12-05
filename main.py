@@ -28,7 +28,10 @@ def dash_test():
 
     transaction_store = TransactionStore(input=TransactionStoreInput(data=transaction_data))
     forecast = ForecastComponent(app=app, input=ForecastComponentInput(store_name=transaction_store.get_name()))
-    table = TransactionTableComponent(app=app, input=TransactionTableInput(store_name=transaction_store.get_name()))
+    table = TransactionTableComponent(app=app, input=TransactionTableInput(
+        store_name=transaction_store.get_name(),
+        graph_name=forecast.get_name()
+    ))
 
     app.layout = html.Div([
         html.Div(id="store-container"),
