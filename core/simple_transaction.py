@@ -49,9 +49,10 @@ class SimpleTransaction:
         """
         value: Decimal
         from_account: Account
-        to_account: Account
+        to_account: Account = None
         split: Split
         for split in tr.splits:
+            # TODO: Handle multiple splits
             if split.is_debit:
                 to_account = split.account
                 value = split.value
@@ -59,6 +60,9 @@ class SimpleTransaction:
                 from_account = split.account
 
         transaction_type: TransactionType
+
+        if to_account is None:
+            raise AttributeError("Can't find to_account for transaction {}".format(tr.guid))
 
         if to_account.type == "LIABILITY":
             transaction_type = TransactionType.QUITTANCE
@@ -100,7 +104,7 @@ class SimpleTransaction:
             from_account = splitFromAccount["sched-xaction"]["account"].value
             to_account = splitToAccount["sched-xaction"]["account"].value
             value = Decimal(830.04)
-        else:
+        else:  # TODO: Handle multiple splits
             for split in tr.template_account.splits:
                 slots = split["sched-xaction"]
                 if slots["debit-numeric"].value > 0:

@@ -29,6 +29,11 @@ class TransactionTableComponent(BaseComponent):
         super().__init__(app=app, config=config)
 
     def render(self):
+        # TODO: Table width should be the container, not more.
+        # TODO: Columns should be resizable
+        # TODO: ELipsis the column Description
+        # TODO: Color the type column cells
+        # TODO: Rowspan for dates
         return html.Div(children=[
             dt.DataTable(
                 id=self.get_name(),
@@ -58,7 +63,9 @@ class TransactionTableComponent(BaseComponent):
             if data is None:
                 raise PreventUpdate
 
-            if self._has_loaded_once and "autosize" in relayoutData:
+            if self._has_loaded_once and (
+                relayoutData is None and "autosize" in relayoutData
+            ):
                 raise PreventUpdate
 
             self._has_loaded_once = True

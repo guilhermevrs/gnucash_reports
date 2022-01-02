@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from dash.dash import Dash
 from dash.dependencies import Input, Output
 from dash.development.base_component import Component
@@ -62,6 +63,8 @@ class ForecastComponent(BaseComponent):
             add_trace(self.get_scheduled_checkings(balance_data), "Checkings (scheduled)", True)
             add_trace(self.get_recorded_liabilities(balance_data), "Liabilities")
             add_trace(self.get_scheduled_liabilities(balance_data), "Liabilities (scheduled)", True)
+
+            fig.add_vline(datetime.now())
 
             return fig
 

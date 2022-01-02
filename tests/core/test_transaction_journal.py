@@ -47,9 +47,6 @@ class TestTransactionJournal:
         self.testClass._get_scheduled_transactions(start_date, end_date)
 
         self.mockBook.session.query.return_value.filter.assert_called_once_with(
-            ScheduledTransaction.start_date <= start_date,
-            or_(ScheduledTransaction.end_date >= start_date,
-                ScheduledTransaction.end_date == None),  # noqa: E711
             ScheduledTransaction.enabled == True  # noqa: E712
         )
 

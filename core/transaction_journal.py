@@ -177,9 +177,6 @@ class TransactionJournal:
         raw_transactions: list[ScheduledTransaction] = self.book.query(
             ScheduledTransaction
         ).filter(
-            ScheduledTransaction.start_date <= start_date,
-            or_(ScheduledTransaction.end_date >= start_date,
-                ScheduledTransaction.end_date == None),  # noqa: E711
             ScheduledTransaction.enabled == True  # noqa: E712
         ).all()
 

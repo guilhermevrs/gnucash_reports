@@ -101,7 +101,10 @@ class TransactionDataItem:
         for rec in recorded:
             if rec.scheduled_transaction is not None:
                 sch_guids.append(rec.scheduled_transaction.guid)
-            transactions.append(SimpleTransaction.simplify_record(rec))
+            try:
+                transactions.append(SimpleTransaction.simplify_record(rec))
+            except AttributeError as e:
+                print(e)
 
         for sch in scheduled:
             if sch.guid in sch_guids:
