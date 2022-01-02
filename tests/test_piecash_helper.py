@@ -73,5 +73,8 @@ class TestPiecashHelper:
     def get_checkings_account(self):
         return self.accounts["Assets:Checkings"]
 
+    def get_split_transaction(self):
+        return self.recorded_transactions['SplitTransferName1']
+
 
 TestPiecashHelper.__test__ = False

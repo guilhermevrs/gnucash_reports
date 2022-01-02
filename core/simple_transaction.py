@@ -43,27 +43,8 @@ class SimpleTransaction:
         return pd.DataFrame([df_dict])
 
     @classmethod
-    def simplify_record(cls, tr: Transaction):
-        """
-        Simplify a Transaction object into SimpleTransaction
-        """
-        value: Decimal
-        from_account: Account
-        to_account: Account = None
-        split: Split
-        for split in tr.splits:
-            # TODO: Handle multiple splits
-            if split.is_debit:
-                to_account = split.account
-                value = split.value
-            elif split.is_credit:
-                from_account = split.account
-
+    def get_transaction_type(cls, to_account: Account, from_account: Account) -> TransactionType:
         transaction_type: TransactionType
-
-        if to_account is None:
-            raise AttributeError("Can't find to_account for transaction {}".format(tr.guid))
-
         if to_account.type == "LIABILITY":
             transaction_type = TransactionType.QUITTANCE
         elif to_account.type == "EXPENSE":
@@ -76,65 +57,95 @@ class SimpleTransaction:
                 transaction_type = TransactionType.TRANSFER
             else:
                 transaction_type = TransactionType.INCOME
+        return transaction_type
 
-        return cls(
-            value=value,
-            description=tr.description,
-            from_account=from_account.fullname,
-            from_account_guid=from_account.guid,
-            to_account=to_account.fullname,
-            to_account_guid=to_account.guid,
-            transaction_type=transaction_type
-        )
+    @classmethod
+    def simplify_record(cls, tr: Transaction):
+        """
+        Simplify a Transaction object into SimpleTransaction
+        """
+        split: Split
+
+        trx = {}
+        for split in tr.splits:
+            value = abs(split.value)
+            if value not in trx:
+                trx[value] = {}
+            if split.is_debit:
+                trx[value]["to_account"] = split.account
+            elif split.is_credit:
+                trx[value]["from_account"] = split.account
+
+        simplified_transactions = []
+        for value in trx.keys():
+            if "to_account" not in trx[value]:
+                raise AttributeError("Can't find to_account for transaction {}".format(tr.guid))
+
+            to_account = trx[value]["to_account"]
+            from_account = trx[value]["from_account"]
+            transaction_type = SimpleTransaction.get_transaction_type(to_account=to_account, from_account=from_account)
+
+            simplified_transactions.append(cls(
+                value=value,
+                description=tr.description,
+                from_account=from_account.fullname,
+                from_account_guid=from_account.guid,
+                to_account=to_account.fullname,
+                to_account_guid=to_account.guid,
+                transaction_type=transaction_type
+            ))
+
+        return simplified_transactions
 
     @classmethod
     def simplify_scheduled_record(cls, tr: ScheduledTransaction):
         """
         Simplify a ScheduledTransaction object into SimpleTransaction
         """
-        value: Decimal
-        from_account: Account
-        to_account: Account
         split: Split
-
+        trx = {}
         if tr.guid == "05a8aacc72a447e4b385a52972ccce25":
-            # TODO: Better handle this one (with debit formula and multiple splits)
+            # TODO: Handle formulas
             splitFromAccount = tr.template_account.splits[0]
             splitToAccount = tr.template_account.splits[2]
-            from_account = splitFromAccount["sched-xaction"]["account"].value
-            to_account = splitToAccount["sched-xaction"]["account"].value
-            value = Decimal(830.04)
-        else:  # TODO: Handle multiple splits
+            trx[Decimal(830.04)] = {
+                "from_account": splitFromAccount["sched-xaction"]["account"].value,
+                "to_account": splitToAccount["sched-xaction"]["account"].value
+            }
+        else:
             for split in tr.template_account.splits:
                 slots = split["sched-xaction"]
-                if slots["debit-numeric"].value > 0:
-                    to_account = slots["account"].value
-                    value = slots["debit-numeric"].value
-                elif slots["credit-numeric"].value > 0:
-                    from_account = slots["account"].value
+                debit_value = slots["debit-numeric"].value
+                credit_value = slots["credit-numeric"].value
+                value = abs(debit_value if debit_value > 0 else credit_value)
+                if value not in trx:
+                    trx[value] = {}
+                if debit_value > 0:
+                    trx[value]["to_account"] = slots["account"].value
+                elif credit_value > 0:
+                    trx[value]["from_account"] = slots["account"].value
 
-        transaction_type: TransactionType
-        if to_account.type == "LIABILITY" or to_account.type == "EXPENSE":
-            if from_account.type == "LIABILITY":
-                transaction_type = TransactionType.LIABILITY
-            else:
-                transaction_type = TransactionType.EXPENSE
-        elif to_account.type == "BANK" or to_account.type == "ASSET":
-            if from_account.type == "BANK" or from_account.type == "ASSET":
-                transaction_type = TransactionType.TRANSFER
-            else:
-                transaction_type = TransactionType.INCOME
+        simplified_transactions = []
+        for value in trx.keys():
+            to_account = trx[value]["to_account"]
+            from_account = trx[value]["from_account"]
+            transaction_type = SimpleTransaction.get_transaction_type(to_account=to_account, from_account=from_account)
 
-        return cls(
-            value=value,
-            description=tr.name,
-            from_account=from_account.fullname,
-            from_account_guid=from_account.guid,
-            to_account=to_account.fullname,
-            to_account_guid=to_account.guid,
-            transaction_type=transaction_type,
-            is_scheduled=True
-        )
+            if to_account is None:
+                raise AttributeError("Can't find to_account for transaction {}".format(tr.guid))
+
+            simplified_transactions.append(cls(
+                value=value,
+                description=tr.name,
+                from_account=from_account.fullname,
+                from_account_guid=from_account.guid,
+                to_account=to_account.fullname,
+                to_account_guid=to_account.guid,
+                transaction_type=transaction_type,
+                is_scheduled=True
+            ))
+
+        return simplified_transactions
 
     @classmethod
     def from_series(cls, series: pd.Series):

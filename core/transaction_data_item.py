@@ -102,7 +102,8 @@ class TransactionDataItem:
             if rec.scheduled_transaction is not None:
                 sch_guids.append(rec.scheduled_transaction.guid)
             try:
-                transactions.append(SimpleTransaction.simplify_record(rec))
+                records = SimpleTransaction.simplify_record(rec)
+                transactions = transactions + records
             except AttributeError as e:
                 print(e)
 
@@ -110,7 +111,7 @@ class TransactionDataItem:
             if sch.guid in sch_guids:
                 sch_guids.remove(sch.guid)
             else:
-                transactions.append(
-                    SimpleTransaction.simplify_scheduled_record(sch))
+                records = SimpleTransaction.simplify_scheduled_record(sch)
+                transactions = transactions + records
 
         return cls(date=date, transactions=transactions)

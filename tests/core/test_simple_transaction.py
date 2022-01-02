@@ -18,7 +18,7 @@ class TestSimpleTransaction:
         should correctly simplify an expense record
         """
         expense = piecash_helper.get_expense_record()
-        result = SimpleTransaction.simplify_record(expense)
+        result = SimpleTransaction.simplify_record(expense)[0]
         assert result.value == Decimal('50')
         assert result.from_account == 'Assets:Checkings'
         assert result.from_account_guid == '24b92fc00a9440c2856281f6eb093536'
@@ -33,7 +33,7 @@ class TestSimpleTransaction:
         should correctly simplify an income record
         """
         income = piecash_helper.get_income_record()
-        result = SimpleTransaction.simplify_record(income)
+        result = SimpleTransaction.simplify_record(income)[0]
         assert result.value == Decimal('400')
         assert result.from_account == 'Incomes:Salary'
         assert result.from_account_guid == '251a9aba30024394b196074e2c4f1630'
@@ -48,7 +48,7 @@ class TestSimpleTransaction:
         should correctly simplify a transfer record
         """
         transfer = piecash_helper.get_recorded_transfer()
-        result = SimpleTransaction.simplify_record(transfer)
+        result = SimpleTransaction.simplify_record(transfer)[0]
         assert result.value == Decimal('666')
         assert result.from_account == 'Assets:Checkings'
         assert result.from_account_guid == '24b92fc00a9440c2856281f6eb093536'
@@ -63,7 +63,7 @@ class TestSimpleTransaction:
         should correctly simplify a scheduled expense
         """
         expense = piecash_helper.get_scheduled_expense()
-        result = SimpleTransaction.simplify_scheduled_record(expense)
+        result = SimpleTransaction.simplify_scheduled_record(expense)[0]
         assert result.value == Decimal('10')
         assert result.from_account == 'Assets:Checkings'
         assert result.from_account_guid == '24b92fc00a9440c2856281f6eb093536'
@@ -78,7 +78,7 @@ class TestSimpleTransaction:
         should correctly simplify a scheduled income
         """
         income = piecash_helper.get_scheduled_income()
-        result = SimpleTransaction.simplify_scheduled_record(income)
+        result = SimpleTransaction.simplify_scheduled_record(income)[0]
         assert result.value == Decimal('123')
         assert result.from_account == 'Incomes:Salary'
         assert result.from_account_guid == '251a9aba30024394b196074e2c4f1630'
@@ -93,7 +93,7 @@ class TestSimpleTransaction:
         should correctly simplify a scheduled transfer
         """
         transfer = piecash_helper.get_scheduled_transfer()
-        result = SimpleTransaction.simplify_scheduled_record(transfer)
+        result = SimpleTransaction.simplify_scheduled_record(transfer)[0]
         assert result.value == Decimal('546')
         assert result.from_account == 'Assets:Checkings'
         assert result.from_account_guid == '24b92fc00a9440c2856281f6eb093536'
@@ -108,7 +108,7 @@ class TestSimpleTransaction:
         should correctly simplify a liability record
         """
         transfer = piecash_helper.get_recorded_liability()
-        result = SimpleTransaction.simplify_record(transfer)
+        result = SimpleTransaction.simplify_record(transfer)[0]
         assert result.value == Decimal('100')
         assert result.from_account == 'Liabilities:Credit card'
         assert result.from_account_guid == '755b41d407b94745aa463749cf462f23'
@@ -123,7 +123,7 @@ class TestSimpleTransaction:
         should correctly simplify a quittance record
         """
         transfer = piecash_helper.get_credit_card_record()
-        result = SimpleTransaction.simplify_record(transfer)
+        result = SimpleTransaction.simplify_record(transfer)[0]
         assert result.value == Decimal('50')
         assert result.from_account == 'Assets:Checkings'
         assert result.from_account_guid == '24b92fc00a9440c2856281f6eb093536'
@@ -132,6 +132,31 @@ class TestSimpleTransaction:
         assert result.transaction_type == TransactionType.QUITTANCE
         assert result.is_scheduled is False
         assert result.description == "CheckingsExpenseCreditCard"
+
+    def test_simplify_split_record(self, piecash_helper: TestPiecashHelper):
+        split_transfer = piecash_helper.get_split_transaction()
+        result = SimpleTransaction.simplify_record(split_transfer)
+
+        item1 = result[0]
+        assert item1.value == Decimal('50')
+        assert item1.from_account == 'Assets:Checkings'
+        assert item1.from_account_guid == '24b92fc00a9440c2856281f6eb093536'
+        assert item1.to_account == 'Expenses:Food'
+        assert item1.to_account_guid == 'f0071228d4e34548be65bf42f1bcf0fa'
+        assert item1.transaction_type == TransactionType.EXPENSE
+        assert item1.is_scheduled is False
+        assert item1.description == "SplitTransferName1"
+
+        item2 = result[1]
+        assert item2.value == Decimal('60')
+        assert item2.from_account == 'Assets:Checkings'
+        assert item2.from_account_guid == '24b92fc00a9440c2856281f6eb093536'
+        assert item2.to_account == 'Expenses:Food'
+        assert item2.to_account_guid == 'f0071228d4e34548be65bf42f1bcf0fa'
+        assert item2.transaction_type == TransactionType.EXPENSE
+        assert item2.is_scheduled is False
+        assert item2.description == "SplitTransferName1"
+        pass
 
     def test_get_dataframe(self):
         """
