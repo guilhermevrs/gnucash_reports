@@ -28,23 +28,117 @@ class TransactionTableComponent(BaseComponent):
         self.input = input
         super().__init__(app=app, config=config)
 
+    def get_stripped_pattern(self, accent, background):
+        return 'repeating-linear-gradient(45deg, {accent}, {accent} 30px, {background} 30px, {background} 60px)'.format(
+            accent=accent, background=background)
+
     def render(self):
-        # TODO: Table width should be the container, not more.
-        # TODO: Columns should be resizable
-        # TODO: ELipsis the column Description
-        # TODO: Color the type column cells
         # TODO: Rowspan for dates
         return html.Div(children=[
             dt.DataTable(
                 id=self.get_name(),
                 columns=[
-                    {'name': 'Date', 'id': 'date', 'type': 'datetime', 'editable': False},
-                    {'name': 'Description', 'id': 'description', 'editable': False},
-                    {'name': 'From', 'id': 'from_account', 'editable': False},
-                    {'name': 'To', 'id': 'to_account', 'editable': False},
-                    {'name': 'Type', 'id': 'transaction_type', 'editable': False},
-                    {'name': 'Scheduled', 'id': 'is_scheduled', 'editable': False},
-                    {'name': 'Value', 'id': 'value', 'editable': False}
+                    {'name': 'Date', 'id': 'date', 'type': 'datetime'},
+                    {'name': 'Description', 'id': 'description'},
+                    {'name': 'From', 'id': 'from_account'},
+                    {'name': 'To', 'id': 'to_account'},
+                    {'name': 'Type', 'id': 'transaction_type'},
+                    {'name': 'Value', 'id': 'value'}
+                ],
+                editable=False,
+                style_cell_conditional=[
+                    {'if': {'column_id': 'date'},
+                     'width': '100px'},
+                    {
+                        'if': {'column_id': 'description'},
+                        'minWidth': '480px', 'width': '480px', 'maxWidth': '480px',
+                        'overflow': 'hidden',
+                        'textOverflow': 'ellipsis',
+                    },
+                    {
+                        'if': {'column_id': 'from_account'},
+                        'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
+                        'overflow': 'hidden',
+                        'textOverflow': 'ellipsis',
+                    },
+                    {
+                        'if': {'column_id': 'to_account'},
+                        'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
+                        'overflow': 'hidden',
+                        'textOverflow': 'ellipsis',
+                    },
+                    {'if': {'column_id': 'transaction_type'},
+                     'width': '100px',
+                     'fontWeight': 'bold'
+                     },
+                    {'if': {'column_id': 'value'},
+                     'width': '100px'},
+                ],
+                style_data_conditional=[
+                    {
+                        'if': {
+                            'filter_query': '({transaction_type} = Expense || {transaction_type} = Quittance) && {is_scheduled} = False',
+                            'column_id': 'transaction_type'
+                        },
+                        'backgroundColor': '#e47777',
+                        'color': 'black'
+                    },
+                    {
+                        'if': {
+                            'filter_query': '({transaction_type} = Expense || {transaction_type} = Quittance) && {is_scheduled} = True',
+                            'column_id': 'transaction_type'
+                        },
+                        'backgroundImage': self.get_stripped_pattern('#e47777', '#f1bbbb'),
+                        'color': 'black'
+                    },
+                    {
+                        'if': {
+                            'filter_query': '{transaction_type} = Income && {is_scheduled} = False',
+                            'column_id': 'transaction_type'
+                        },
+                        'backgroundColor': '#73c577',
+                        'color': 'black'
+                    },
+                    {
+                        'if': {
+                            'filter_query': '{transaction_type} = Income && {is_scheduled} = True',
+                            'column_id': 'transaction_type'
+                        },
+                        'backgroundImage': self.get_stripped_pattern('#73c577', '#d0eec5'),
+                        'color': 'black'
+                    },
+                    {
+                        'if': {
+                            'filter_query': '{transaction_type} = Liability && {is_scheduled} = False',
+                            'column_id': 'transaction_type'
+                        },
+                        'backgroundColor': '#ffac65',
+                        'color': 'black'
+                    },
+                    {
+                        'if': {
+                            'filter_query': '{transaction_type} = Liability && {is_scheduled} = True',
+                            'column_id': 'transaction_type'
+                        },
+                        'backgroundImage': self.get_stripped_pattern('#ffac65', '#ffd1b3'),
+                        'color': 'black'
+                    },
+                    {
+                        'if': {
+                            'filter_query': '{transaction_type} = Transfer && {is_scheduled} = False',
+                            'column_id': 'transaction_type'
+                        },
+                        'backgroundColor': '#31d4ff',
+                        'color': 'black'
+                    },
+                    {
+                        'if': {
+                            'filter_query': '{transaction_type} = Transfer && {is_scheduled} = True',
+                            'column_id': 'transaction_type'
+                        },
+                        'backgroundImage': self.get_stripped_pattern('#31d4ff', '#c6def4'),
+                        'color': 'black'
+                    }
                 ]
             )
         ])
@@ -74,6 +168,7 @@ class TransactionTableComponent(BaseComponent):
             df = self.get_filtered_data(trx_data.get_dataframe(), relayoutData)
 
             df["value"] = df["value"].astype(float)
+            df["is_scheduled"] = df["is_scheduled"].astype('str')
 
             df['transaction_type'] = df['transaction_type'].map({
                 TransactionType.EXPENSE: 'Expense',
@@ -98,7 +193,7 @@ class TransactionTableComponent(BaseComponent):
 
             date_lower = datetime.strptime(date_lower, "%Y-%m-%d %H:%M:%S")
             date_lower = date_lower.replace(hour=0, minute=0, second=0)
-            
+
             date_upper = datetime.strptime(date_upper, "%Y-%m-%d %H:%M:%S")
             date_upper = date_upper.replace(hour=23, minute=59, second=59)
 
