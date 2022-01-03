@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Tuple
-from dash.dependencies import Output, Input
+from dash.dependencies import Output, Input, State
 from dash.development.base_component import Component
 from dash.exceptions import PreventUpdate
 
 from components.transaction_store_block import TransactionStore
-from core.typings import TransactionType
+from core.typings import BalanceType, TransactionType
 from .base_block import BaseComponent, BaseComponentConfig
-from dash import Dash, html, dash_table as dt
+from dash import Dash, dcc, html, dash_table as dt
 import pandas as pd
 import json
 
@@ -35,6 +35,10 @@ class TransactionTableComponent(BaseComponent):
     def render(self):
         # TODO: Rowspan for dates
         return html.Div(children=[
+            dcc.Store(
+                id=self.get_legend_store_name(),
+                data=None
+            ),
             dt.DataTable(
                 id=self.get_name(),
                 columns=[
@@ -146,14 +150,19 @@ class TransactionTableComponent(BaseComponent):
     def get_name(self) -> str:
         return self.prefix("transaction-table")
 
+    def get_legend_store_name(self) -> str:
+        return self.prefix("legend_store_name")
+
     def callbacks(self, app: Dash) -> None:
         @app.callback(
-            # Output(self.get_name(), "columns"),
             Output(self.get_name(), "data"),
+            Output(self.get_legend_store_name(), "data"),
             Input(self.input.store_name, "data"),
-            Input(self.input.graph_name, "relayoutData")
+            Input(self.input.graph_name, "relayoutData"),
+            Input(self.input.graph_name, "restyleData"),
+            State(self.get_legend_store_name(), "data")
         )
-        def load_data(data, relayoutData) -> Tuple[List[str], pd.DataFrame]:
+        def load_data(data, relayoutData, restyleData, legendMemory):
             if data is None:
                 raise PreventUpdate
 
@@ -164,8 +173,12 @@ class TransactionTableComponent(BaseComponent):
 
             self._has_loaded_once = True
 
+            legends = legendMemory if legendMemory is not None else [True, True, True, True]
+            if restyleData is not None:
+                legends[restyleData[1][0]] = restyleData[0]["visible"][0] is True
+
             trx_data = TransactionStore.load_data(data)
-            df = self.get_filtered_data(trx_data.get_dataframe(), relayoutData)
+            df = self.get_filtered_data(trx_data.get_dataframe(), relayoutData, legends)
 
             df["value"] = df["value"].astype(float)
             df["is_scheduled"] = df["is_scheduled"].astype('str')
@@ -181,9 +194,9 @@ class TransactionTableComponent(BaseComponent):
 
             df['date'] = df["date"].dt.strftime('%d-%m-%Y')
 
-            return df.to_dict(orient='records')
+            return [df.to_dict(orient='records'), legends]
 
-    def get_filtered_data(self, df: pd.DataFrame, relayout: Dict) -> pd.DataFrame:
+    def get_filtered_data(self, df: pd.DataFrame, relayout: Dict, legends) -> pd.DataFrame:
         if relayout is None:
             return df
 
@@ -200,4 +213,20 @@ class TransactionTableComponent(BaseComponent):
             df = df[df["date"] >= date_lower]
             df = df[df["date"] <= date_upper]
 
-        return df
+        legends_type = [
+            {"type": "Assets:Current:Checkings", "scheduled": False},
+            {"type": "Assets:Current:Checkings", "scheduled": True},
+            {"type": "Liabilities", "scheduled": False},
+            {"type": "Liabilities", "scheduled": True}
+        ]
+        allowed_legends = []
+        for i in range(len(legends)):
+            if legends[i]:
+                allowed_legends.append(legends_type[i])
+
+        dataframes = []
+        for allowed in allowed_legends:
+            temp_df = df[df["from_account"].str.contains(allowed["type"])]
+            dataframes.append(temp_df[temp_df["is_scheduled"] == allowed["scheduled"]])
+
+        return pd.concat(dataframes)
