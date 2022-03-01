@@ -24,7 +24,7 @@ def dash_test():
     )
     journal = TransactionJournal(book=book, config=config)
 
-    transaction_data = journal.get_transaction_data(date(2021, 11, 20), date(2022, 5, 26))
+    transaction_data = journal.get_transaction_data(date(2022, 2, 1), date(2022, 10, 1))
 
     transaction_store = TransactionStore(input=TransactionStoreInput(data=transaction_data))
     forecast = ForecastComponent(app=app, input=ForecastComponentInput(store_name=transaction_store.get_name()))

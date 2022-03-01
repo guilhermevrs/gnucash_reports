@@ -225,8 +225,9 @@ class TransactionTableComponent(BaseComponent):
                 allowed_legends.append(legends_type[i])
 
         dataframes = []
+        dataframes.append(df[df["transaction_type"] == TransactionType.INCOME])
         for allowed in allowed_legends:
             temp_df = df[df["from_account"].str.contains(allowed["type"])]
             dataframes.append(temp_df[temp_df["is_scheduled"] == allowed["scheduled"]])
 
-        return pd.concat(dataframes)
+        return pd.concat(dataframes).sort_values('date')

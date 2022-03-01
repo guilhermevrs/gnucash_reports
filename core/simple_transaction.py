@@ -83,7 +83,12 @@ class SimpleTransaction:
 
             to_account = trx[value]["to_account"]
             from_account = trx[value]["from_account"]
-            transaction_type = SimpleTransaction.get_transaction_type(to_account=to_account, from_account=from_account)
+            
+            try:
+                transaction_type = SimpleTransaction.get_transaction_type(to_account=to_account, from_account=from_account)
+            except:
+                transaction_type = TransactionType.EXPENSE
+                print("{} -> {} ({})".format(from_account.fullname, to_account.fullname, tr.description))
 
             simplified_transactions.append(cls(
                 value=value,
