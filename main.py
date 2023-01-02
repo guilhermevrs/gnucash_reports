@@ -17,14 +17,14 @@ def dash_test():
     app = dash.Dash(__name__)
 
     book = piecash.open_book(
-        "/mnt/c/Users/guilh/Documents/Gnucash/personal-sqlite.gnucash", open_if_lock=True)
+        "/Users/guilherme.vieiraschwade/Documents/Personal/Gnucash/personal-sqlite.gnucash", open_if_lock=True)
     config = TransactionJournalConfig(
         checkings_parent_guid="3838edd7804247868ebed2d2404d4c26",
         liabilities_parent_guid="44a238b52fdd44c6bad26b9eb5efc219"
     )
     journal = TransactionJournal(book=book, config=config)
 
-    transaction_data = journal.get_transaction_data(date(2022, 2, 1), date(2022, 10, 1))
+    transaction_data = journal.get_transaction_data(date(2023, 1, 1), date(2023, 8, 1))
 
     transaction_store = TransactionStore(input=TransactionStoreInput(data=transaction_data))
     forecast = ForecastComponent(app=app, input=ForecastComponentInput(store_name=transaction_store.get_name()))

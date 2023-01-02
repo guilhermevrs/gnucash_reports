@@ -79,7 +79,9 @@ class SimpleTransaction:
         simplified_transactions = []
         for value in trx.keys():
             if "to_account" not in trx[value]:
-                raise AttributeError("Can't find to_account for transaction {}".format(tr.guid))
+                raise AttributeError("Missing to_account for {}-{} ({})".format(tr.post_date, tr.description, tr.guid))
+            if "from_account" not in trx[value]:
+                raise AttributeError("Missing from_account for {}-{} ({})".format(tr.post_date, tr.description, tr.guid))
 
             to_account = trx[value]["to_account"]
             from_account = trx[value]["from_account"]

@@ -1,19 +1,19 @@
 # gnucash-reports
 
-Python Project Boilerplate
-==========================
+# Python Project Boilerplate
 
 This repo provides a standardized template for modern Python projects based
 on the layout [recommended by Kenneth Reitz](http://www.kennethreitz.org/essays/repository-structure-and-python).
 
 Features:
-* Editable install support
-* Support for installing development dependencies through setup.py
-* PyTest unit-test support
-* PyLint
-* An [.editorconfig](http://editorconfig.org/) file
-* Sphinx documentation generation
-* `pyproject.toml` PEP 517/518 support
+
+- Editable install support
+- Support for installing development dependencies through setup.py
+- PyTest unit-test support
+- PyLint
+- An [.editorconfig](http://editorconfig.org/) file
+- Sphinx documentation generation
+- `pyproject.toml` PEP 517/518 support
 
 # Getting Started
 
@@ -52,13 +52,13 @@ Or Windows with PowerShell:
 Now run:
 
 ```
-pip install -e .[dev]
+pip install -e ."[dev]"
 ```
 
 This will install the packages the project depends on in production as well as packages needed during development.
 
-* The `-e` option specifies that you wish to install the package in "editable" mode for development.
-* The `.[dev]` argument directs pip to install the package that is defined by the `setup.py` file the in the current directory and to additionally install the extra depdencies defined in the "dev" group. The additional dependencies include things lik ethe Sphinx documentation generator, pytest, pylint and other development packages that end-users of the package will not need.
+- The `-e` option specifies that you wish to install the package in "editable" mode for development.
+- The `.[dev]` argument directs pip to install the package that is defined by the `setup.py` file the in the current directory and to additionally install the extra depdencies defined in the "dev" group. The additional dependencies include things lik ethe Sphinx documentation generator, pytest, pylint and other development packages that end-users of the package will not need.
 
 Refer to the [pip install documentation](https://pip.pypa.io/en/stable/reference/pip_install/#) for more information on these options.
 
